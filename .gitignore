@@ -1,0 +1,113 @@
+# ----------------------------------------------------------------------
+# macOS
+# ----------------------------------------------------------------------
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+._*
+.Spotlight-V100
+.Trashes
+.fseventsd
+
+# ----------------------------------------------------------------------
+# Windows / Linux filesystem noise
+# ----------------------------------------------------------------------
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+.directory
+
+# ----------------------------------------------------------------------
+# Editors and IDEs
+# ----------------------------------------------------------------------
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+.ccls-cache/
+
+# ----------------------------------------------------------------------
+# Python tooling, if helper scripts are added later
+# ----------------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+dist/
+build/
+*.egg-info/
+
+# ----------------------------------------------------------------------
+# Logs and temporary files
+# ----------------------------------------------------------------------
+*.log
+*.tmp
+*.temp
+*.bak
+*.backup
+*.old
+
+# ----------------------------------------------------------------------
+# Gig Performer generated/autosave/backup files
+# ----------------------------------------------------------------------
+*.gig.bak
+*.gig.backup
+*.gig.autosave
+*.gig~
+*.gpfav.bak
+*.gpfav.backup
+*.gpfav.autosave
+*.gpfav~
+
+# Local/private Gig Performer work-in-progress.
+local/
+private/
+scratch/
+work-in-progress/
+wip/
+
+# ----------------------------------------------------------------------
+# MIDI / synth dumps and personal backups
+# ----------------------------------------------------------------------
+*.mid
+*.midi
+*.syx
+*.sysex
+*.X8A
+*.X8L
+*.X8U
+*.X7A
+*.X7L
+*.X7U
+*.X6A
+*.X6L
+*.X6U
+
+# ----------------------------------------------------------------------
+# Large exported packages
+# ----------------------------------------------------------------------
+*.zip
+*.tar
+*.tar.gz
+*.tgz
+*.7z
+*.rar
+
+# ----------------------------------------------------------------------
+# Repo-local notes not intended for publication
+# ----------------------------------------------------------------------
+NOTES.local.md
+TODO.local.md
+*.local.md
+.env
+.env.*

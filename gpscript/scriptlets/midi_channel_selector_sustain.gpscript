@@ -1,0 +1,162 @@
+// Define the scriptlet params exposed to the API
+var
+    OperationMode("Operation Mode"): Discrete Parameter "OFF/ON", "OFF/AUTO" = "OFF/ON"
+    MainSwitch: Discrete Parameter "OFF", "ON" = "ON"
+    CH1, CH2, CH3, CH4, CH5, CH6, CH7, CH8, CH9  : Discrete Parameter "OFF", "AUTO", "ON" = "ON"
+    CH10, CH11, CH12, CH13, CH14, CH15, CH16  : Discrete Parameter "OFF", "AUTO", "ON" = "ON"
+    AutoSustainerVelocityThreshold: Subrange Parameter 1..127 = 100
+
+// Internal param array to make it easier to parse the scriptlet param values
+var
+   param_array : Discrete Array = [
+        MainSwitch,
+        CH1, CH2, CH3, CH4, CH5, CH6, CH7, CH8,
+        CH9, CH10, CH11, CH12, CH13, CH14, CH15, CH16
+    ]
+
+
+// AutoSustainer-related variables
+var
+    AS_CH1, AS_CH2, AS_CH3, AS_CH4, AS_CH5, AS_CH6, AS_CH7, AS_CH8, AS_CH9: AutoSustainer
+    AS_CH10, AS_CH11, AS_CH12, AS_CH13, AS_CH14, AS_CH15, AS_CH16: AutoSustainer
+
+
+Initialization
+   //OpenLogWindow()
+   SetDisplayMessage("Copyright (c) 2025 Pauo V. C. Medeiros")
+   SetInfoMessage(<<<
+       Controls the sustain pedal operation mode ("ON", "AUTO", "OFF").
+   >>>)
+End
+
+
+Function PlayWithAutoSustainer(m : NoteMessage)
+    var
+        channel : Integer = GetChannel(m)
+        AS : AutoSustainer
+
+    Select
+        (channel ==  1) do AutoSustainer_Play( AS_CH1, m)
+        (channel ==  2) do AutoSustainer_Play( AS_CH2, m)
+        (channel ==  3) do AutoSustainer_Play( AS_CH3, m)
+        (channel ==  4) do AutoSustainer_Play( AS_CH4, m)
+        (channel ==  5) do AutoSustainer_Play( AS_CH5, m)
+        (channel ==  6) do AutoSustainer_Play( AS_CH6, m)
+        (channel ==  7) do AutoSustainer_Play( AS_CH7, m)
+        (channel ==  8) do AutoSustainer_Play( AS_CH8, m)
+        (channel ==  9) do AutoSustainer_Play( AS_CH9, m)
+        (channel == 10) do AutoSustainer_Play(AS_CH10, m)
+        (channel == 11) do AutoSustainer_Play(AS_CH11, m)
+        (channel == 12) do AutoSustainer_Play(AS_CH12, m)
+        (channel == 13) do AutoSustainer_Play(AS_CH13, m)
+        (channel == 14) do AutoSustainer_Play(AS_CH14, m)
+        (channel == 15) do AutoSustainer_Play(AS_CH15, m)
+        (channel == 16) do AutoSustainer_Play(AS_CH16, m)
+    End
+End
+
+
+Function KillAutoSustainer(channel : Integer)
+    Select
+        (channel ==  1) do AutoSustainer_Stop( AS_CH1)
+        (channel ==  2) do AutoSustainer_Stop( AS_CH2)
+        (channel ==  3) do AutoSustainer_Stop( AS_CH3)
+        (channel ==  4) do AutoSustainer_Stop( AS_CH4)
+        (channel ==  5) do AutoSustainer_Stop( AS_CH5)
+        (channel ==  6) do AutoSustainer_Stop( AS_CH6)
+        (channel ==  7) do AutoSustainer_Stop( AS_CH7)
+        (channel ==  8) do AutoSustainer_Stop( AS_CH8)
+        (channel ==  9) do AutoSustainer_Stop( AS_CH9)
+        (channel == 10) do AutoSustainer_Stop(AS_CH10)
+        (channel == 11) do AutoSustainer_Stop(AS_CH11)
+        (channel == 12) do AutoSustainer_Stop(AS_CH12)
+        (channel == 13) do AutoSustainer_Stop(AS_CH13)
+        (channel == 14) do AutoSustainer_Stop(AS_CH14)
+        (channel == 15) do AutoSustainer_Stop(AS_CH15)
+        (channel == 16) do AutoSustainer_Stop(AS_CH16)
+    End
+End
+
+   
+Function KillAllNotes(channel : Integer)
+    KillAutoSustainer(channel)
+    SendNow(MakeControlChangeMessageEx(64, 0, channel))  // Sustain Pedal Off
+    SendNow(MakeControlChangeMessageEx(123, 0, channel))  // All Notes Off
+End
+
+
+On ParameterValueChanged(param_value : Discrete, index : Integer) Matching MainSwitch
+    var channel: Integer
+
+    If (param_value == "OFF") Then
+        For channel=1; channel<=16; channel=channel+1 Do
+            KillAllNotes(channel)
+        End
+    End
+End
+
+
+On ParameterValueChanged(param_value : Discrete, index : Integer)
+    Matching 
+        CH1, CH2, CH3, CH4, CH5, CH6, CH7, CH8,
+        CH9, CH10, CH11, CH12, CH13, CH14, CH15, CH16
+   
+    var
+        channel : Integer = index + 1
+        param_value_reset_here : Boolean = false
+        
+
+    If ((OperationMode == "OFF/AUTO") And (param_value == "ON")) Then
+        param_value = "AUTO"
+        param_value_reset_here = true
+    End
+
+    If (!param_value_reset_here) Then
+        // Always kill auto-sustainer on successfull param change
+        KillAutoSustainer(channel)
+        // Kill all sound if sustain is disabled
+        If (param_value == "OFF") Then
+            KillAllNotes(channel)
+        End
+    End
+End
+
+
+// Handle sustain pedal messages
+On ControlChangeEvent (m : ControlChangeMessage) Matching 64
+    var channel : Integer = GetChannel(m)
+    var channel_is_allowed : Boolean = param_array[channel] == "ON"
+    var main_switch_is_on : Boolean = MainSwitch == "ON"
+
+    if (GetCCValue(m) == 0) Then
+        // The sustain pedal is being turned off, always allow
+        KillAutoSustainer(channel)
+        SendNow(m)
+    Else
+        If (main_switch_is_on and channel_is_allowed) Then
+            SendNow(m)
+        End
+    End
+
+End
+
+
+
+on NoteEvent(m : NoteMessage)
+   var
+       channel : Integer = GetChannel(m)
+       velocity : Integer = GetVelocity(m)
+       using_autosustainer : Boolean = param_array[channel] == "AUTO"
+
+    If (using_autosustainer) Then
+        if ((velocity > AutoSustainerVelocityThreshold)) Then
+            //Print("Killing autosustainer")
+            KillAutoSustainer(channel)
+        Else
+            //Print("Playing with autosustainer")
+            PlayWithAutoSustainer(m)
+        end
+    Else
+        SendNow(m)
+    End
+end

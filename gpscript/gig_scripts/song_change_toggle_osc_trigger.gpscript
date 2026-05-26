@@ -1,0 +1,22 @@
+Var
+   SongChangeToggle : Boolean = false
+   ValueToBeSent : Double = 0.0
+
+On Song(oldSongIndex : Integer, newSongIndex : Integer)
+
+   SongChangeToggle = !SongChangeToggle
+
+   If SongChangeToggle Then
+      ValueToBeSent = 1.0
+   Else
+      ValueToBeSent = 0.0
+   End
+
+   OSC_SendDoubleSpecific(
+      "/SongChangeTrigger/SetValue",
+      ValueToBeSent,
+      "127.0.0.1",
+      OSC_GetGPListeningPort()
+   )
+
+End

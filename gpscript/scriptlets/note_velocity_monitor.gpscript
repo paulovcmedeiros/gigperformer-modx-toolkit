@@ -1,0 +1,72 @@
+Initialization
+   //OpenLogWindow()
+   SetDisplayMessage("Copyright (c) 2025 Pauo V. C. Medeiros")
+   SetInfoMessage(<<<
+       Read scaled velocities from incoming messsages at each MIDI channel.
+   >>>)
+End
+
+var
+   CH1   : Continuous Parameter = 0.0
+   CH2   : Continuous Parameter = 0.0
+   CH3   : Continuous Parameter = 0.0
+   CH4   : Continuous Parameter = 0.0
+   CH5   : Continuous Parameter = 0.0
+   CH6   : Continuous Parameter = 0.0
+   CH7   : Continuous Parameter = 0.0
+   CH8   : Continuous Parameter = 0.0
+   CH9   : Continuous Parameter = 0.0
+   CH10  : Continuous Parameter = 0.0
+   CH11  : Continuous Parameter = 0.0
+   CH12  : Continuous Parameter = 0.0
+   CH13  : Continuous Parameter = 0.0
+   CH14  : Continuous Parameter = 0.0
+   CH15  : Continuous Parameter = 0.0
+   CH16  : Continuous Parameter = 0.0
+   
+
+   
+Function SetParameterValue (channel : Integer, new_param_value : Double)
+    Select
+        (channel ==  1) do CH1  = new_param_value
+        (channel ==  2) do CH2  = new_param_value
+        (channel ==  3) do CH3  = new_param_value
+        (channel ==  4) do CH4  = new_param_value
+        (channel ==  5) do CH5  = new_param_value
+        (channel ==  6) do CH6  = new_param_value
+        (channel ==  7) do CH7  = new_param_value
+        (channel ==  8) do CH8  = new_param_value
+        (channel ==  9) do CH9  = new_param_value
+        (channel == 10) do CH10 = new_param_value
+        (channel == 11) do CH11 = new_param_value
+        (channel == 12) do CH12 = new_param_value
+        (channel == 13) do CH13 = new_param_value
+        (channel == 14) do CH14 = new_param_value
+        (channel == 15) do CH15 = new_param_value
+        (channel == 16) do CH16 = new_param_value
+    End
+End
+
+
+
+
+//Called when a NoteOn or NoteOff message is received
+//Note: this will NOT be called for NoteOn/NoteOff messages if you have explicit
+//NoteOnEvent/NoteOffEvent respectively callbacks defined
+On NoteEvent(m : NoteMessage)
+    // Send the original note message without delay
+    SendNow(m)
+    SetParameterValue(GetChannel(m), MidiToParam(GetVelocity(m)))    
+End
+
+//Called when a CC message is received
+On ControlChangeEvent(m : ControlChangeMessage)
+    var cc_number : Integer
+
+    SendNow(m)
+
+    cc_number = GetCCNumber(m)
+    If (cc_number == 123) Then
+        SetParameterValue(GetChannel(m), 0.0) 
+    End
+End

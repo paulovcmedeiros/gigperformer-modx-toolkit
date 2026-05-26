@@ -1,0 +1,72 @@
+var
+    OPERATION_MODE("Operation Mode"): Discrete Parameter
+        "Song Part Changer", "Tap Tempo" = "Song Part Changer"
+
+var
+    sustain_msg_channel, expression_msg_channel: Integer = -1
+    sustain_msg_value_on_step: Integer = -1
+    expression_msg_value_on_step: Integer = 0
+    sustain_activated, expression_activated: Boolean = false
+
+
+Initialization
+   //OpenLogWindow()
+   SetDisplayMessage("Copyright (c) 2025 Pauo V. C. Medeiros")
+   SetInfoMessage(<<<
+       Controls the 2-button footswitch pedal operation mode.
+   >>>)
+End
+
+// Handle sustain pedal messages
+On ControlChangeEvent (m : ControlChangeMessage) Matching 11, 64
+    var
+        both_controllers_stepped: Boolean
+        this_controller_number: Integer = GetCCNumber(m)
+        this_msg_value: Integer = GetCCValue(m)
+        this_msg_channel: Integer = GetChannel(m)
+        current_op_mode_index, n_operation_modes, index_of_next_picked_mode: Integer
+
+    if (this_controller_number == 64) Then
+        if (sustain_msg_channel < 1) Then
+            sustain_msg_channel = this_msg_channel
+        End
+        if (this_msg_channel == sustain_msg_channel) Then
+            if (sustain_msg_value_on_step < 0) Then
+                sustain_msg_value_on_step = this_msg_value
+            End
+            sustain_activated = this_msg_value == sustain_msg_value_on_step
+        End
+    Else
+        if (expression_msg_channel < 1) Then
+            expression_msg_channel = this_msg_channel
+        End
+        if (this_msg_channel == expression_msg_channel) Then
+            if (expression_msg_value_on_step < 0) Then
+                expression_msg_value_on_step = this_msg_value
+            End
+            expression_activated = this_msg_value == expression_msg_value_on_step
+        End
+    End
+    both_controllers_stepped = expression_activated And sustain_activated
+
+    if (both_controllers_stepped) Then
+        // Change operation mode if the two controllers are stepped in at the "same" time
+        current_op_mode_index = GetIndexOfDiscreteParameterItem(OPERATION_MODE, OPERATION_MODE)
+        n_operation_modes = GetDiscreteParameterItemCount(OPERATION_MODE)
+        index_of_next_picked_mode = (current_op_mode_index + 1) % n_operation_modes
+        OPERATION_MODE = GetDiscreteParameterItem(OPERATION_MODE, index_of_next_picked_mode)
+    Elsif (expression_activated or sustain_activated) Then
+       // Act only when we step in the buttons, not when we release them
+        if (OPERATION_MODE == "Tap Tempo") Then
+            Tap()
+        Elsif InSetlistMode() Then
+            If (expression_activated) Then
+                Print("prev")
+                SongPrevPart()
+            Else
+                Print("NEXT")
+                SongNextPart()
+            End
+        End
+    End
+End

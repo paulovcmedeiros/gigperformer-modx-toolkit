@@ -1,0 +1,90 @@
+var
+   MainSwitch : Subrange Parameter -3..3 = 0
+   CH1, CH2, CH3, CH4, CH5, CH6, CH7, CH8, CH9  : Subrange Parameter -6..6 = 0
+   CH10, CH11, CH12, CH13, CH14, CH15, CH16  : Subrange Parameter -6..6 = 0
+
+
+Initialization
+   //OpenLogWindow()
+   SetDisplayMessage("Copyright (c) 2025 Pauo V. C. Medeiros")
+   SetInfoMessage(<<<
+       Change notes octave respecting MIDI channel.
+   >>>)
+End
+
+
+Function KillAllNotes(channel : Integer)
+    SendNow(MakeControlChangeMessageEx(123, 0, channel))  // All Notes Off
+    SendNow(MakeControlChangeMessageEx(64, 0, channel))  // Sustain Pedal Off
+End
+
+
+On ParameterValueChanged(param_value : Subrange, index : Integer)
+    Matching CH1, CH2, CH3, CH4, CH5, CH6, CH7, CH8, CH9,
+             CH10, CH11, CH12, CH13, CH14, CH15, CH16
+             
+    var channel : Integer = index + 1
+    
+    KillAllNotes(channel)
+End
+
+
+On ParameterValueChanged(param_value : Subrange, index : Integer)
+    Matching MainSwitch
+
+    CH1  = param_value
+    CH2  = param_value
+    CH3  = param_value
+    CH4  = param_value
+    CH5  = param_value
+    CH6  = param_value
+    CH7  = param_value
+    CH8  = param_value
+    CH9  = param_value
+    CH10 = param_value
+    CH11 = param_value
+    CH12 = param_value
+    CH13 = param_value
+    CH14 = param_value
+    CH15 = param_value
+    CH16 = param_value
+End
+
+
+//Called when a NoteOn or NoteOff message is received
+//Note: this will NOT be called for NoteOn/NoteOff messages if you have explicit
+//NoteOnEvent/NoteOffEvent respectively callbacks defined
+On NoteEvent(m : NoteMessage)
+    var channel, new_octave : Integer
+
+    channel = GetChannel(m)
+    Select
+        (channel ==  1) do new_octave = CH1
+        (channel ==  2) do new_octave = CH2
+        (channel ==  3) do new_octave = CH3
+        (channel ==  4) do new_octave = CH4
+        (channel ==  5) do new_octave = CH5
+        (channel ==  6) do new_octave = CH6
+        (channel ==  7) do new_octave = CH7
+        (channel ==  8) do new_octave = CH8
+        (channel ==  9) do new_octave = CH9
+        (channel == 10) do new_octave = CH10
+        (channel == 11) do new_octave = CH11
+        (channel == 12) do new_octave = CH12
+        (channel == 13) do new_octave = CH13
+        (channel == 14) do new_octave = CH14
+        (channel == 15) do new_octave = CH15
+        (channel == 16) do new_octave = CH16
+    End
+
+    If (new_octave == 0) Then
+        SendNow(m)
+    Else
+        If Abs(new_octave) > 3 Then
+            SendNow(m)
+            new_octave = new_octave % 3
+        End
+        SendNow(WithTranspose(m, 12 * new_octave))
+    End
+
+End
