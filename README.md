@@ -1,5 +1,10 @@
 # Paulo Medeiros' Gig Performer Toolkit for Yamaha MODX
 
+![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
+![Status: early](https://img.shields.io/badge/status-early-orange.svg)
+![Gig Performer](https://img.shields.io/badge/Gig%20Performer-tested%205.2.2-lightgrey.svg)
+![Yamaha MODX](https://img.shields.io/badge/Yamaha-MODX-lightgrey.svg)
+
 Small collection of GPScript files I use with Gig Performer and a Yamaha MODX.
 The focus is MIDI routing/control, a few scriptlets, and some MODX SysEx helpers.
 
