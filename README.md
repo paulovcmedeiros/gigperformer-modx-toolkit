@@ -1,7 +1,12 @@
-# Vini’s Gig Performer MODX Toolkit
+# Paulo Medeiros’ Gig Performer Toolkit for Yamaha MODX
 
 Unofficial GPScript, scriptlet, example, and documentation toolkit for using
 Gig Performer as a MIDI control surface and automation layer for Yamaha MODX.
+
+This project is independent and is not affiliated with, endorsed by, or sponsored
+by Yamaha, Deskew Technologies, or Gig Performer. It contains tools and notes I
+develop primarily for my own use and share in the hope that they are useful to
+the wider community.
 
 The main idea is simple:
 
