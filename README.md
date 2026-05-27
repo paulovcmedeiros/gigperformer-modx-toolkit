@@ -5,7 +5,7 @@
 [![Gig Performer](https://img.shields.io/badge/Gig%20Performer-tested%205.2.2-lightgrey.svg)](https://gigperformer.com)
 [![Yamaha MODX](https://img.shields.io/badge/Yamaha-MODX-lightgrey.svg)](https://yamahasynth.com/learn/modx-series-synthesizers/introducing-the-modx-music-synthesizer)
 
-Small collection of GPScript files I use with Gig Performer and a Yamaha MODX.
+Reusable GPScript components and MODX helpers extracted from my own GigPerformer/MODX live-rig workflow.
 The focus is MIDI routing/control, a few scriptlets, and some MODX SysEx helpers.
 
 This project is unofficial and is not affiliated with, endorsed by, or sponsored
