@@ -6,9 +6,9 @@ var
 
 Initialization
     //OpenLogWindow()
-    SetDisplayMessage("Copyright (c) 2025 Pauo V. C. Medeiros")
+    SetDisplayMessage("Copyright (c) 2026 Paulo V. C. Medeiros")
     SetInfoMessage(<<<
-        Change notes octave respecting MIDI channel.
+        Transpose notes by octave per MIDI channel.
     >>>)
 End
 

@@ -5,9 +5,9 @@ var
 
 Initialization
     //OpenLogWindow()
-    SetDisplayMessage("Copyright (c) 2025 Pauo V. C. Medeiros")
+    SetDisplayMessage("Copyright (c) 2026 Paulo V. C. Medeiros")
     SetInfoMessage(<<<
-        Set AF1 and AF2 for each MIDI channel.
+        Send MODX AF1 or AF2 state per MIDI channel.
     >>>)
 End
 

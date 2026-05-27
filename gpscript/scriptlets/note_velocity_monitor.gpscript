@@ -1,8 +1,8 @@
 Initialization
     //OpenLogWindow()
-    SetDisplayMessage("Copyright (c) 2025 Pauo V. C. Medeiros")
+    SetDisplayMessage("Copyright (c) 2026 Paulo V. C. Medeiros")
     SetInfoMessage(<<<
-        Read scaled velocities from incoming messsages at each MIDI channel.
+        Show per-channel note velocity values.
     >>>)
 End
 

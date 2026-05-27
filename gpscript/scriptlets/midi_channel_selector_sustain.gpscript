@@ -23,9 +23,9 @@ var
 
 Initialization
     //OpenLogWindow()
-    SetDisplayMessage("Copyright (c) 2025 Pauo V. C. Medeiros")
+    SetDisplayMessage("Copyright (c) 2026 Paulo V. C. Medeiros")
     SetInfoMessage(<<<
-        Controls the sustain pedal operation mode ("ON", "AUTO", "OFF").
+        Route sustain by channel with optional auto-sustain.
     >>>)
 End
 
