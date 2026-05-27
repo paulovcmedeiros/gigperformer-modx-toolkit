@@ -1,0 +1,103 @@
+//----------------------------------------------------------
+// Functions related to retrieval of MODX Performance names
+//-----------------------------------------------------------
+Var
+   MODXTK_performanceNameBytesBuffer : Integer[20]
+
+
+Function MODXTK_ClearCurrentPerformanceNameBuffer()
+   // Clear buffer used to receive partial updated to requested Performance Names.
+   Var
+      i : Integer
+
+   For i = 0; i <= 19; i = i + 1 Do
+      MODXTK_performanceNameBytesBuffer[i] = 0x20 - 1
+   End
+End
+
+
+Function MODXTK_IsPerformanceNameFullyReceived() Returns Boolean
+   // Return whether all expected 20 bytes for a performance name have been received.
+   Var
+      i : Integer
+
+   result = true
+   For i = 0; i <= 19; i = i + 1 Do
+      If Not MODXTK_IsAsciiChar(MODXTK_performanceNameBytesBuffer[i]) Then
+         result = false
+      End
+   End
+End
+
+
+Function MODXTK_GetCurrentPerformanceName() Returns String
+   // Return full performance name built from bytes buffered from separate SysEx msgs. Use " " for non-received bytes.
+   Var
+      i, c : Integer
+      s : String = ""
+
+   For i = 0; i <= 19; i = i + 1 Do
+      c = MODXTK_performanceNameBytesBuffer[i]
+      If MODXTK_IsAsciiChar(c) Then
+          s = s + MODXTK_ByteToChar(c)
+      Else
+          s = s + " "
+      End
+   End
+
+   result = TrimString(s)
+End
+
+
+Function MODXTK_ParsePerformanceNameReplyIfApplicable(sx : SysexMessage)  Returns Boolean
+   // Parse SysEx reply, look for "Current Performance Name Char" in it, and update
+   // the corresponding char on MODXTK_performanceNameBytesBuffer if this info is found.
+   //
+   // Upon receiving all expected chars, set corresponding full name to PerformanceNameWidget Widget
+   // and clear MODXTK_performanceNameBytesBuffer.
+   //
+   // Observed SysEx msg format:
+   // (the MODX sends one such message for each character in the current Performance name)
+   // F0 43 10 7F 1C 07 30 40 oo dd F7
+   //
+   // In this layout:
+   //   sx[6] = 0x30           --> Data block identifier
+   //   sx[7] = 0x40           --> Offset/field selector for the Performance Name area
+   //   sx[8] = oo, 0x00..0x13 --> Character offset within the Performance Name,
+   //                              i.e. character index 0..19, for 20 characters total
+   //   sx[9] = dd             --> Character byte, interpreted as ASCII
+   //
+   // Return a boolean indicating whether the received SysEx was in fact used.
+   // ------------------------------------------------------------
+   Var
+      msgBlock : Integer
+      charIndexOffset, perfNameAreaOffset : Integer
+
+   result = false
+   If SM_Length(sx) >= 11 Then
+      msgBlock = SM_GetValue(sx, 6)
+      perfNameAreaOffset = SM_GetValue(sx, 7)
+      charIndexOffset = SM_GetValue(sx, 8)
+
+      If (msgBlock == 0x30) And (perfNameAreaOffset == 0x40) And (charIndexOffset >= 0x00) And (charIndexOffset <= 0x13) Then
+         MODXTK_performanceNameBytesBuffer[charIndexOffset] = SM_GetValue(sx, 9)
+         result = true
+      End
+   End
+End
+
+
+Function MODXTK_SetPerformanceNameWidgetValueIfApplicable(sx : SysexMessage)  Returns Boolean
+    // Call MODXTK_ParsePerformanceNameReplyIfApplicable and, upon having received all expected chars, set
+    // PerformanceNameWidget to the corresponding full performance name. Then clear MODXTK_performanceNameBytesBuffer.
+    // Return a boolean indicating whether the received SysEx was in fact used.
+    // ------------------------------------------------------------
+    result = false
+    If MODXTK_IsMODXSysEx(sx) Then
+      result = MODXTK_ParsePerformanceNameReplyIfApplicable(sx)
+      If result And MODXTK_IsPerformanceNameFullyReceived() Then
+         SetWidgetLabel(PerformanceNameWidget, MODXTK_GetCurrentPerformanceName())
+         MODXTK_ClearCurrentPerformanceNameBuffer()
+      End
+    End
+End

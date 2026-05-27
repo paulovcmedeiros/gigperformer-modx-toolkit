@@ -1,0 +1,10 @@
+//----------------------------------------------------------
+// Functions related to general MODX SysEx message handling
+//----------------------------------------------------------
+Function MODXTK_IsMODXSysEx(sx : SysexMessage) Returns Boolean
+    // Return whether the SysEx is a MODX-style SysEx.
+    result = SM_Length(sx) >= 6
+             And MODXTK_IsYamahaSysEx(sx)
+             And SM_GetValue(sx, 3) == 0x7F
+             And SM_GetValue(sx, 4) == 0x1C
+End

@@ -1,0 +1,56 @@
+// Example rackspace integration for the MODX toolkit.
+// This file is intentionally a working example, not the reusable library.
+// Reusable code lives in the include files.
+
+// TODO: Replace these declarations by doc info telling the user about these required Widgets.
+//       This would allow the user to keep using AutoDeclare in the main script editor Window in GP.
+//$<AutoDeclare>
+// DO NOT EDIT THIS SECTION MANUALLY
+Var
+   MODXInSysEx : MidiInBlock
+   PartLabel01 : Widget
+   PartLabel02 : Widget
+   PartLabel03 : Widget
+   PartLabel04 : Widget
+   PartLabel05 : Widget
+   PartLabel06 : Widget
+   PartLabel07 : Widget
+   PartLabel08 : Widget
+   PerformanceNameWidget : Widget
+   SendCurrentVolumeValues : Widget
+//$</AutoDeclare>
+
+// These files must be included in this specific order
+Include "gigperformer-modx-toolkit/gpscript/GeneralUtils/Byte2String"
+Include "gigperformer-modx-toolkit/gpscript/GeneralUtils/SysEx"
+Include "gigperformer-modx-toolkit/gpscript/MODX/SysEx"
+Include "gigperformer-modx-toolkit/gpscript/MODX/PerformanceNameRetriever"
+Include "gigperformer-modx-toolkit/gpscript/MODX/PerformancePartNameRetriever"
+
+Initialization
+   //OpenLogWindow()
+End
+
+
+On SysexEvent(sx : SysexMessage) From MODXInSysEx
+    Var
+        sysExConsumed, sysExConsumedInThisCall : Boolean = false
+
+   sysExConsumedInThisCall = MODXTK_SetPerformanceNameWidgetValueIfApplicable(sx)
+   sysExConsumed = sysExConsumed Or sysExConsumedInThisCall
+
+   sysExConsumedInThisCall = MODXTK_SetPerformancePartNameWidgetValueIfApplicable(sx)
+   sysExConsumed = sysExConsumed Or sysExConsumedInThisCall
+
+   // Place your code from after this comment block.
+   // I recommend using functions that return booleans indicating whether the
+   // SysEx message has been used, and then set sysExConsumed as we did above
+   // with the function in this example. By doing this, you prevent unused
+   // SysEx messages from being swallowed.
+
+   // Finally, we make sure knowingly unused SysEx is sent forward
+   // for eventual processing elsewhere.
+   If Not sysExConsumed Then
+      SendSysexInternalNow(MODXInSysEx, sx)
+   End
+End

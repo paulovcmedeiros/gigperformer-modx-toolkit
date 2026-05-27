@@ -1,9 +1,9 @@
-Function IsAsciiChar(b : Integer) Returns Boolean
-   // Return whether the value of the byte can e mapped to a printable ASCII char.
+Function MODXTK_IsAsciiChar(b : Integer) Returns Boolean
+   // Return whether the value of the byte can be mapped to a printable ASCII char.
    result = b >= 32 And b <= 126
 End
 
-Function ByteToChar(b : Integer) Returns String
+Function MODXTK_ByteToChar(b : Integer) Returns String
    // Return the ASCII char corresponding to byte with value b.
    //
    // E.g: b = 32 -> " "; b = 65 -> "A"; b = 126 -> "~".
@@ -22,7 +22,7 @@ Function ByteToChar(b : Integer) Returns String
          ]
 
    result = ""
-   If IsAsciiChar(b) Then
+   If MODXTK_IsAsciiChar(b) Then
       result = PrintableAsciiMap[b - indexOffset]
    End
 End
