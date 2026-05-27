@@ -1,6 +1,6 @@
 var
     OPERATION_MODE("Operation Mode"): Discrete Parameter
-        "Song Part Changer", "Tap Tempo" = "Song Part Changer"
+    "Song Part Changer", "Tap Tempo" = "Song Part Changer"
 
 var
     sustain_msg_channel, expression_msg_channel: Integer = -1
@@ -10,11 +10,11 @@ var
 
 
 Initialization
-   //OpenLogWindow()
-   SetDisplayMessage("Copyright (c) 2025 Pauo V. C. Medeiros")
-   SetInfoMessage(<<<
-       Controls the 2-button footswitch pedal operation mode.
-   >>>)
+    //OpenLogWindow()
+    SetDisplayMessage("Copyright (c) 2025 Pauo V. C. Medeiros")
+    SetInfoMessage(<<<
+        Controls the 2-button footswitch pedal operation mode.
+    >>>)
 End
 
 // Handle sustain pedal messages
@@ -56,7 +56,7 @@ On ControlChangeEvent (m : ControlChangeMessage) Matching 11, 64
         index_of_next_picked_mode = (current_op_mode_index + 1) % n_operation_modes
         OPERATION_MODE = GetDiscreteParameterItem(OPERATION_MODE, index_of_next_picked_mode)
     Elsif (expression_activated or sustain_activated) Then
-       // Act only when we step in the buttons, not when we release them
+        // Act only when we step in the buttons, not when we release them
         if (OPERATION_MODE == "Tap Tempo") Then
             Tap()
         Elsif InSetlistMode() Then

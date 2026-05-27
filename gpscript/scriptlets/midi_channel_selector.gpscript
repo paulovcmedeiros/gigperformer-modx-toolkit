@@ -1,18 +1,18 @@
 var
-   MainSwitch: Discrete Parameter "OFF", "ON" = "ON"
-   CH1, CH2, CH3, CH4, CH5, CH6, CH7, CH8 : Discrete Parameter "OFF", "ON" = "OFF"
-   CH9, CH10, CH11, CH12, CH13, CH14, CH15, CH16  : Discrete Parameter "OFF", "ON" = "OFF"
+    MainSwitch: Discrete Parameter "OFF", "ON" = "ON"
+    CH1, CH2, CH3, CH4, CH5, CH6, CH7, CH8 : Discrete Parameter "OFF", "ON" = "OFF"
+    CH9, CH10, CH11, CH12, CH13, CH14, CH15, CH16  : Discrete Parameter "OFF", "ON" = "OFF"
 
 
 Initialization
-   //OpenLogWindow()
-   SetDisplayMessage("Copyright (c) 2025 Pauo V. C. Medeiros")
-   SetInfoMessage(<<<
-       Read note on/off status from incoming messsages at each MIDI channel.
-   >>>)
+    //OpenLogWindow()
+    SetDisplayMessage("Copyright (c) 2025 Pauo V. C. Medeiros")
+    SetInfoMessage(<<<
+        Read note on/off status from incoming messsages at each MIDI channel.
+    >>>)
 End
 
-   
+
 Function KillAllNotes(channel : Integer)
     SendNow(MakeControlChangeMessageEx(123, 0, channel))  // All Notes Off
     SendNow(MakeControlChangeMessageEx(64, 0, channel))  // Sustain Pedal Off
@@ -21,9 +21,9 @@ End
 
 // Kill all sound if the channel gets disabled
 On ParameterValueChanged(param_value : Discrete, index : Integer)
-    Matching 
-        MainSwitch
-   
+    Matching
+    MainSwitch
+
     var channel : Integer = index
 
     If MainSwitch == "OFF" Then
@@ -40,7 +40,7 @@ End
 On MidiEvent(m : MidiMessage)
     var channel : Integer
     var channel_is_allowed, main_switch_is_on : Boolean = false
-    
+
 
     channel = GetChannel(m)
     Select

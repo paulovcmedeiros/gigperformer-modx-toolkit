@@ -1,31 +1,31 @@
 Initialization
-   //OpenLogWindow()
-   SetDisplayMessage("Copyright (c) 2025 Pauo V. C. Medeiros")
-   SetInfoMessage(<<<
-       Read scaled velocities from incoming messsages at each MIDI channel.
-   >>>)
+    //OpenLogWindow()
+    SetDisplayMessage("Copyright (c) 2025 Pauo V. C. Medeiros")
+    SetInfoMessage(<<<
+        Read scaled velocities from incoming messsages at each MIDI channel.
+    >>>)
 End
 
 var
-   CH1   : Continuous Parameter = 0.0
-   CH2   : Continuous Parameter = 0.0
-   CH3   : Continuous Parameter = 0.0
-   CH4   : Continuous Parameter = 0.0
-   CH5   : Continuous Parameter = 0.0
-   CH6   : Continuous Parameter = 0.0
-   CH7   : Continuous Parameter = 0.0
-   CH8   : Continuous Parameter = 0.0
-   CH9   : Continuous Parameter = 0.0
-   CH10  : Continuous Parameter = 0.0
-   CH11  : Continuous Parameter = 0.0
-   CH12  : Continuous Parameter = 0.0
-   CH13  : Continuous Parameter = 0.0
-   CH14  : Continuous Parameter = 0.0
-   CH15  : Continuous Parameter = 0.0
-   CH16  : Continuous Parameter = 0.0
-   
+    CH1   : Continuous Parameter = 0.0
+    CH2   : Continuous Parameter = 0.0
+    CH3   : Continuous Parameter = 0.0
+    CH4   : Continuous Parameter = 0.0
+    CH5   : Continuous Parameter = 0.0
+    CH6   : Continuous Parameter = 0.0
+    CH7   : Continuous Parameter = 0.0
+    CH8   : Continuous Parameter = 0.0
+    CH9   : Continuous Parameter = 0.0
+    CH10  : Continuous Parameter = 0.0
+    CH11  : Continuous Parameter = 0.0
+    CH12  : Continuous Parameter = 0.0
+    CH13  : Continuous Parameter = 0.0
+    CH14  : Continuous Parameter = 0.0
+    CH15  : Continuous Parameter = 0.0
+    CH16  : Continuous Parameter = 0.0
 
-   
+
+
 Function SetParameterValue (channel : Integer, new_param_value : Double)
     Select
         (channel ==  1) do CH1  = new_param_value
@@ -56,7 +56,7 @@ End
 On NoteEvent(m : NoteMessage)
     // Send the original note message without delay
     SendNow(m)
-    SetParameterValue(GetChannel(m), MidiToParam(GetVelocity(m)))    
+    SetParameterValue(GetChannel(m), MidiToParam(GetVelocity(m)))
 End
 
 //Called when a CC message is received
@@ -67,6 +67,6 @@ On ControlChangeEvent(m : ControlChangeMessage)
 
     cc_number = GetCCNumber(m)
     If (cc_number == 123) Then
-        SetParameterValue(GetChannel(m), 0.0) 
+        SetParameterValue(GetChannel(m), 0.0)
     End
 End

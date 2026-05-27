@@ -8,7 +8,7 @@ var
 
 // Internal param array to make it easier to parse the scriptlet param values
 var
-   param_array : Discrete Array = [
+    param_array : Discrete Array = [
         MainSwitch,
         CH1, CH2, CH3, CH4, CH5, CH6, CH7, CH8,
         CH9, CH10, CH11, CH12, CH13, CH14, CH15, CH16
@@ -22,11 +22,11 @@ var
 
 
 Initialization
-   //OpenLogWindow()
-   SetDisplayMessage("Copyright (c) 2025 Pauo V. C. Medeiros")
-   SetInfoMessage(<<<
-       Controls the sustain pedal operation mode ("ON", "AUTO", "OFF").
-   >>>)
+    //OpenLogWindow()
+    SetDisplayMessage("Copyright (c) 2025 Pauo V. C. Medeiros")
+    SetInfoMessage(<<<
+        Controls the sustain pedal operation mode ("ON", "AUTO", "OFF").
+    >>>)
 End
 
 
@@ -77,7 +77,7 @@ Function KillAutoSustainer(channel : Integer)
     End
 End
 
-   
+
 Function KillAllNotes(channel : Integer)
     KillAutoSustainer(channel)
     SendNow(MakeControlChangeMessageEx(64, 0, channel))  // Sustain Pedal Off
@@ -97,14 +97,14 @@ End
 
 
 On ParameterValueChanged(param_value : Discrete, index : Integer)
-    Matching 
-        CH1, CH2, CH3, CH4, CH5, CH6, CH7, CH8,
-        CH9, CH10, CH11, CH12, CH13, CH14, CH15, CH16
-   
+    Matching
+    CH1, CH2, CH3, CH4, CH5, CH6, CH7, CH8,
+    CH9, CH10, CH11, CH12, CH13, CH14, CH15, CH16
+
     var
         channel : Integer = index + 1
         param_value_reset_here : Boolean = false
-        
+
 
     If ((OperationMode == "OFF/AUTO") And (param_value == "ON")) Then
         param_value = "AUTO"
@@ -143,10 +143,10 @@ End
 
 
 on NoteEvent(m : NoteMessage)
-   var
-       channel : Integer = GetChannel(m)
-       velocity : Integer = GetVelocity(m)
-       using_autosustainer : Boolean = param_array[channel] == "AUTO"
+    var
+        channel : Integer = GetChannel(m)
+        velocity : Integer = GetVelocity(m)
+        using_autosustainer : Boolean = param_array[channel] == "AUTO"
 
     If (using_autosustainer) Then
         if ((velocity > AutoSustainerVelocityThreshold)) Then

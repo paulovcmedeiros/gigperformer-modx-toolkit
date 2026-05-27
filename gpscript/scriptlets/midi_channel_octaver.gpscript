@@ -1,15 +1,15 @@
 var
-   MainSwitch : Subrange Parameter -3..3 = 0
-   CH1, CH2, CH3, CH4, CH5, CH6, CH7, CH8, CH9  : Subrange Parameter -6..6 = 0
-   CH10, CH11, CH12, CH13, CH14, CH15, CH16  : Subrange Parameter -6..6 = 0
+    MainSwitch : Subrange Parameter -3..3 = 0
+    CH1, CH2, CH3, CH4, CH5, CH6, CH7, CH8, CH9  : Subrange Parameter -6..6 = 0
+    CH10, CH11, CH12, CH13, CH14, CH15, CH16  : Subrange Parameter -6..6 = 0
 
 
 Initialization
-   //OpenLogWindow()
-   SetDisplayMessage("Copyright (c) 2025 Pauo V. C. Medeiros")
-   SetInfoMessage(<<<
-       Change notes octave respecting MIDI channel.
-   >>>)
+    //OpenLogWindow()
+    SetDisplayMessage("Copyright (c) 2025 Pauo V. C. Medeiros")
+    SetInfoMessage(<<<
+        Change notes octave respecting MIDI channel.
+    >>>)
 End
 
 
@@ -21,10 +21,10 @@ End
 
 On ParameterValueChanged(param_value : Subrange, index : Integer)
     Matching CH1, CH2, CH3, CH4, CH5, CH6, CH7, CH8, CH9,
-             CH10, CH11, CH12, CH13, CH14, CH15, CH16
-             
+    CH10, CH11, CH12, CH13, CH14, CH15, CH16
+
     var channel : Integer = index + 1
-    
+
     KillAllNotes(channel)
 End
 

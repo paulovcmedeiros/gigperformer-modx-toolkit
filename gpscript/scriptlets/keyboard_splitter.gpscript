@@ -1,87 +1,87 @@
 var
-   LearnTogglesMode : Discrete Parameter "OFF", "ON" = "OFF"
+    LearnTogglesMode : Discrete Parameter "OFF", "ON" = "OFF"
 
-   CH1_Lower_Toggle, CH2_Lower_Toggle, CH3_Lower_Toggle, CH4_Lower_Toggle,
-   CH5_Lower_Toggle, CH6_Lower_Toggle, CH7_Lower_Toggle, CH8_Lower_Toggle,
-   CH9_Lower_Toggle, CH10_Lower_Toggle, CH11_Lower_Toggle, CH12_Lower_Toggle,
-   CH13_Lower_Toggle, CH14_Lower_Toggle, CH15_Lower_Toggle, CH16_Lower_Toggle :
-       Discrete Parameter "OFF", "ON" = "OFF"
+CH1_Lower_Toggle, CH2_Lower_Toggle, CH3_Lower_Toggle, CH4_Lower_Toggle,
+CH5_Lower_Toggle, CH6_Lower_Toggle, CH7_Lower_Toggle, CH8_Lower_Toggle,
+CH9_Lower_Toggle, CH10_Lower_Toggle, CH11_Lower_Toggle, CH12_Lower_Toggle,
+CH13_Lower_Toggle, CH14_Lower_Toggle, CH15_Lower_Toggle, CH16_Lower_Toggle :
+Discrete Parameter "OFF", "ON" = "OFF"
 
-   CH1_Upper_Toggle, CH2_Upper_Toggle, CH3_Upper_Toggle, CH4_Upper_Toggle,
-   CH5_Upper_Toggle, CH6_Upper_Toggle, CH7_Upper_Toggle, CH8_Upper_Toggle,
-   CH9_Upper_Toggle, CH10_Upper_Toggle, CH11_Upper_Toggle, CH12_Upper_Toggle,
-   CH13_Upper_Toggle, CH14_Upper_Toggle, CH15_Upper_Toggle, CH16_Upper_Toggle :
-       Discrete Parameter "OFF", "ON" = "OFF"
+CH1_Upper_Toggle, CH2_Upper_Toggle, CH3_Upper_Toggle, CH4_Upper_Toggle,
+CH5_Upper_Toggle, CH6_Upper_Toggle, CH7_Upper_Toggle, CH8_Upper_Toggle,
+CH9_Upper_Toggle, CH10_Upper_Toggle, CH11_Upper_Toggle, CH12_Upper_Toggle,
+CH13_Upper_Toggle, CH14_Upper_Toggle, CH15_Upper_Toggle, CH16_Upper_Toggle :
+Discrete Parameter "OFF", "ON" = "OFF"
 
-   CH1_Lower, CH2_Lower, CH3_Lower, CH4_Lower,
-   CH5_Lower, CH6_Lower, CH7_Lower, CH8_Lower,
-   CH9_Lower, CH10_Lower, CH11_Lower, CH12_Lower,
-   CH13_Lower, CH14_Lower, CH15_Lower, CH16_Lower : Parameter AsNoteNames C-2 .. G8 = "C-2"
+CH1_Lower, CH2_Lower, CH3_Lower, CH4_Lower,
+CH5_Lower, CH6_Lower, CH7_Lower, CH8_Lower,
+CH9_Lower, CH10_Lower, CH11_Lower, CH12_Lower,
+CH13_Lower, CH14_Lower, CH15_Lower, CH16_Lower : Parameter AsNoteNames C-2 .. G8 = "C-2"
 
-   CH1_Upper, CH2_Upper, CH3_Upper, CH4_Upper,
-   CH5_Upper, CH6_Upper, CH7_Upper, CH8_Upper,
-   CH9_Upper, CH10_Upper, CH11_Upper, CH12_Upper,
-   CH13_Upper, CH14_Upper, CH15_Upper, CH16_Upper : Parameter AsNoteNames C-2 .. G8 = "G8"
+CH1_Upper, CH2_Upper, CH3_Upper, CH4_Upper,
+CH5_Upper, CH6_Upper, CH7_Upper, CH8_Upper,
+CH9_Upper, CH10_Upper, CH11_Upper, CH12_Upper,
+CH13_Upper, CH14_Upper, CH15_Upper, CH16_Upper : Parameter AsNoteNames C-2 .. G8 = "G8"
 
 Var
-   LowerNotes : Discrete Array = [
+    LowerNotes : Discrete Array = [
         CH1_Lower, CH2_Lower, CH3_Lower, CH4_Lower,
         CH5_Lower, CH6_Lower, CH7_Lower, CH8_Lower,
         CH9_Lower, CH10_Lower, CH11_Lower, CH12_Lower,
         CH13_Lower, CH14_Lower, CH15_Lower, CH16_Lower
     ]
-   UpperNotes : Discrete Array =  [
+    UpperNotes : Discrete Array =  [
         CH1_Upper, CH2_Upper, CH3_Upper, CH4_Upper,
         CH5_Upper, CH6_Upper, CH7_Upper, CH8_Upper,
         CH9_Upper, CH10_Upper, CH11_Upper, CH12_Upper,
         CH13_Upper, CH14_Upper, CH15_Upper, CH16_Upper
     ]
-   LearningLowerNotes : Discrete Array =  [
-      CH1_Lower_Toggle, CH2_Lower_Toggle, CH3_Lower_Toggle, CH4_Lower_Toggle,
-      CH5_Lower_Toggle, CH6_Lower_Toggle, CH7_Lower_Toggle, CH8_Lower_Toggle,
-      CH9_Lower_Toggle, CH10_Lower_Toggle, CH11_Lower_Toggle, CH12_Lower_Toggle,
-      CH13_Lower_Toggle, CH14_Lower_Toggle, CH15_Lower_Toggle, CH16_Lower_Toggle
+    LearningLowerNotes : Discrete Array =  [
+        CH1_Lower_Toggle, CH2_Lower_Toggle, CH3_Lower_Toggle, CH4_Lower_Toggle,
+        CH5_Lower_Toggle, CH6_Lower_Toggle, CH7_Lower_Toggle, CH8_Lower_Toggle,
+        CH9_Lower_Toggle, CH10_Lower_Toggle, CH11_Lower_Toggle, CH12_Lower_Toggle,
+        CH13_Lower_Toggle, CH14_Lower_Toggle, CH15_Lower_Toggle, CH16_Lower_Toggle
     ]
-   LearningUpperNotes : Discrete Array =  [
-      CH1_Upper_Toggle, CH2_Upper_Toggle, CH3_Upper_Toggle, CH4_Upper_Toggle,
-      CH5_Upper_Toggle, CH6_Upper_Toggle, CH7_Upper_Toggle, CH8_Upper_Toggle,
-      CH9_Upper_Toggle, CH10_Upper_Toggle, CH11_Upper_Toggle, CH12_Upper_Toggle,
-      CH13_Upper_Toggle, CH14_Upper_Toggle, CH15_Upper_Toggle, CH16_Upper_Toggle
-   ]
+    LearningUpperNotes : Discrete Array =  [
+        CH1_Upper_Toggle, CH2_Upper_Toggle, CH3_Upper_Toggle, CH4_Upper_Toggle,
+        CH5_Upper_Toggle, CH6_Upper_Toggle, CH7_Upper_Toggle, CH8_Upper_Toggle,
+        CH9_Upper_Toggle, CH10_Upper_Toggle, CH11_Upper_Toggle, CH12_Upper_Toggle,
+        CH13_Upper_Toggle, CH14_Upper_Toggle, CH15_Upper_Toggle, CH16_Upper_Toggle
+    ]
 
 
 
 Initialization
-   //OpenLogWindow()
-   SetDisplayMessage("Copyright (c) 2026 Paulo V. C. Medeiros")
-   SetInfoMessage(<<<
-       Create split zones per MIDI channel.
-   >>>)
+    //OpenLogWindow()
+    SetDisplayMessage("Copyright (c) 2026 Paulo V. C. Medeiros")
+    SetInfoMessage(<<<
+        Create split zones per MIDI channel.
+    >>>)
 End
 
 
 On ParameterValueChanged(param_value : Discrete, index : Integer)
     Matching
-      CH1_Lower_Toggle, CH2_Lower_Toggle, CH3_Lower_Toggle, CH4_Lower_Toggle,
-      CH5_Lower_Toggle, CH6_Lower_Toggle, CH7_Lower_Toggle, CH8_Lower_Toggle,
-      CH9_Lower_Toggle, CH10_Lower_Toggle, CH11_Lower_Toggle, CH12_Lower_Toggle,
-      CH13_Lower_Toggle, CH14_Lower_Toggle, CH15_Lower_Toggle, CH16_Lower_Toggle,
-      CH1_Upper_Toggle, CH2_Upper_Toggle, CH3_Upper_Toggle, CH4_Upper_Toggle,
-      CH5_Upper_Toggle, CH6_Upper_Toggle, CH7_Upper_Toggle, CH8_Upper_Toggle,
-      CH9_Upper_Toggle, CH10_Upper_Toggle, CH11_Upper_Toggle, CH12_Upper_Toggle,
-      CH13_Upper_Toggle, CH14_Upper_Toggle, CH15_Upper_Toggle, CH16_Upper_Toggle
-    
+    CH1_Lower_Toggle, CH2_Lower_Toggle, CH3_Lower_Toggle, CH4_Lower_Toggle,
+    CH5_Lower_Toggle, CH6_Lower_Toggle, CH7_Lower_Toggle, CH8_Lower_Toggle,
+    CH9_Lower_Toggle, CH10_Lower_Toggle, CH11_Lower_Toggle, CH12_Lower_Toggle,
+    CH13_Lower_Toggle, CH14_Lower_Toggle, CH15_Lower_Toggle, CH16_Lower_Toggle,
+    CH1_Upper_Toggle, CH2_Upper_Toggle, CH3_Upper_Toggle, CH4_Upper_Toggle,
+    CH5_Upper_Toggle, CH6_Upper_Toggle, CH7_Upper_Toggle, CH8_Upper_Toggle,
+    CH9_Upper_Toggle, CH10_Upper_Toggle, CH11_Upper_Toggle, CH12_Upper_Toggle,
+    CH13_Upper_Toggle, CH14_Upper_Toggle, CH15_Upper_Toggle, CH16_Upper_Toggle
+
     Var
         isLower : Boolean = index < 16
         channelIndex : Integer = index % 16
-    
+
     If (param_value == "ON") And (LearnTogglesMode == "OFF") Then
-       If isLower Then
-           LowerNotes[channelIndex] = "C-2"
-       Else
-          UpperNotes[channelIndex] = "G8"
-       End
-       param_value = "OFF"
+        If isLower Then
+            LowerNotes[channelIndex] = "C-2"
+        Else
+            UpperNotes[channelIndex] = "G8"
+        End
+        param_value = "OFF"
     End
 End
 

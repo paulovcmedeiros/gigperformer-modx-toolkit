@@ -7,17 +7,17 @@
 //$<AutoDeclare>
 // DO NOT EDIT THIS SECTION MANUALLY
 Var
-   MODXInSysEx : MidiInBlock
-   PartLabel01 : Widget
-   PartLabel02 : Widget
-   PartLabel03 : Widget
-   PartLabel04 : Widget
-   PartLabel05 : Widget
-   PartLabel06 : Widget
-   PartLabel07 : Widget
-   PartLabel08 : Widget
-   PerformanceNameWidget : Widget
-   SendCurrentVolumeValues : Widget
+    MODXInSysEx : MidiInBlock
+    PartLabel01 : Widget
+    PartLabel02 : Widget
+    PartLabel03 : Widget
+    PartLabel04 : Widget
+    PartLabel05 : Widget
+    PartLabel06 : Widget
+    PartLabel07 : Widget
+    PartLabel08 : Widget
+    PerformanceNameWidget : Widget
+    SendCurrentVolumeValues : Widget
 //$</AutoDeclare>
 
 // These files must be included in this specific order
@@ -28,7 +28,7 @@ Include "gigperformer-modx-toolkit/gpscript/MODX/PerformanceNameRetriever"
 Include "gigperformer-modx-toolkit/gpscript/MODX/PerformancePartNameRetriever"
 
 Initialization
-   //OpenLogWindow()
+    //OpenLogWindow()
 End
 
 
@@ -36,21 +36,21 @@ On SysexEvent(sx : SysexMessage) From MODXInSysEx
     Var
         sysExConsumed, sysExConsumedInThisCall : Boolean = false
 
-   sysExConsumedInThisCall = MODXTK_SetPerformanceNameWidgetValueIfApplicable(sx)
-   sysExConsumed = sysExConsumed Or sysExConsumedInThisCall
+    sysExConsumedInThisCall = MODXTK_SetPerformanceNameWidgetValueIfApplicable(sx)
+    sysExConsumed = sysExConsumed Or sysExConsumedInThisCall
 
-   sysExConsumedInThisCall = MODXTK_SetPerformancePartNameWidgetValueIfApplicable(sx)
-   sysExConsumed = sysExConsumed Or sysExConsumedInThisCall
+    sysExConsumedInThisCall = MODXTK_SetPerformancePartNameWidgetValueIfApplicable(sx)
+    sysExConsumed = sysExConsumed Or sysExConsumedInThisCall
 
-   // Place your code from after this comment block.
-   // I recommend using functions that return booleans indicating whether the
-   // SysEx message has been used, and then set sysExConsumed as we did above
-   // with the function in this example. By doing this, you prevent unused
-   // SysEx messages from being swallowed.
+    // Place your code from after this comment block.
+    // I recommend using functions that return booleans indicating whether the
+    // SysEx message has been used, and then set sysExConsumed as we did above
+    // with the function in this example. By doing this, you prevent unused
+    // SysEx messages from being swallowed.
 
-   // Finally, we make sure knowingly unused SysEx is sent forward
-   // for eventual processing elsewhere.
-   If Not sysExConsumed Then
-      SendSysexInternalNow(MODXInSysEx, sx)
-   End
+    // Finally, we make sure knowingly unused SysEx is sent forward
+    // for eventual processing elsewhere.
+    If Not sysExConsumed Then
+        SendSysexInternalNow(MODXInSysEx, sx)
+    End
 End

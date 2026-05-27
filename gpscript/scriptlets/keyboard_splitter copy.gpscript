@@ -1,64 +1,64 @@
 var
-   CH1_Lower, CH2_Lower, CH3_Lower, CH4_Lower,
-   CH5_Lower, CH6_Lower, CH7_Lower, CH8_Lower,
-   CH9_Lower, CH10_Lower, CH11_Lower, CH12_Lower,
-   CH13_Lower, CH14_Lower, CH15_Lower, CH16_Lower  : Parameter AsNoteNames C-2 .. G8 = "C-2"
+    CH1_Lower, CH2_Lower, CH3_Lower, CH4_Lower,
+    CH5_Lower, CH6_Lower, CH7_Lower, CH8_Lower,
+    CH9_Lower, CH10_Lower, CH11_Lower, CH12_Lower,
+    CH13_Lower, CH14_Lower, CH15_Lower, CH16_Lower  : Parameter AsNoteNames C-2 .. G8 = "C-2"
 
-   CH1_Upper, CH2_Upper, CH3_Upper, CH4_Upper,
-   CH5_Upper, CH6_Upper, CH7_Upper, CH8_Upper,
-   CH9_Upper, CH10_Upper, CH11_Upper, CH12_Upper,
-   CH13_Upper, CH14_Upper, CH15_Upper, CH16_Upper  : Parameter AsNoteNames C-2 .. G8 = "G8"
+CH1_Upper, CH2_Upper, CH3_Upper, CH4_Upper,
+CH5_Upper, CH6_Upper, CH7_Upper, CH8_Upper,
+CH9_Upper, CH10_Upper, CH11_Upper, CH12_Upper,
+CH13_Upper, CH14_Upper, CH15_Upper, CH16_Upper  : Parameter AsNoteNames C-2 .. G8 = "G8"
 
-   RangeExtremeMeansLearnParam : Parameter
-       "OFF",
-       "1", "2", "3", "4", "5", "6", "7", "8",
-       "9", "10", "11", "12", "13", "14", "15", "16",
-       "ALL"
-       = "OFF"
-    channelIsInLearningMode : Boolean Array = [
-        false, false, false, false, false, false, false, false,
-        false, false, false, false, false, false, false, false
-    ]
+RangeExtremeMeansLearnParam : Parameter
+"OFF",
+"1", "2", "3", "4", "5", "6", "7", "8",
+"9", "10", "11", "12", "13", "14", "15", "16",
+"ALL"
+= "OFF"
+channelIsInLearningMode : Boolean Array = [
+false, false, false, false, false, false, false, false,
+false, false, false, false, false, false, false, false
+]
 Var
-   LowerNotes : Discrete Array
-   UpperNotes : Discrete Array
-   LearningLowerNotes : Boolean Array
-   LearningUpperNotes : Boolean Array
+    LowerNotes : Discrete Array
+    UpperNotes : Discrete Array
+    LearningLowerNotes : Boolean Array
+    LearningUpperNotes : Boolean Array
 
 
 Function RefreshLowerAndUpperNoteArrays()
     Var
-       iChannel : Integer
-       learningIsOn : Boolean
+        iChannel : Integer
+        learningIsOn : Boolean
 
     LowerNotes = [
-        CH1_Lower, CH2_Lower, CH3_Lower, CH4_Lower,
-        CH5_Lower, CH6_Lower, CH7_Lower, CH8_Lower,
-        CH9_Lower, CH10_Lower, CH11_Lower, CH12_Lower,
-        CH13_Lower, CH14_Lower, CH15_Lower, CH16_Lower
+    CH1_Lower, CH2_Lower, CH3_Lower, CH4_Lower,
+    CH5_Lower, CH6_Lower, CH7_Lower, CH8_Lower,
+    CH9_Lower, CH10_Lower, CH11_Lower, CH12_Lower,
+    CH13_Lower, CH14_Lower, CH15_Lower, CH16_Lower
     ]
     UpperNotes = [
-        CH1_Upper, CH2_Upper, CH3_Upper, CH4_Upper,
-        CH5_Upper, CH6_Upper, CH7_Upper, CH8_Upper,
-        CH9_Upper, CH10_Upper, CH11_Upper, CH12_Upper,
-        CH13_Upper, CH14_Upper, CH15_Upper, CH16_Upper
+    CH1_Upper, CH2_Upper, CH3_Upper, CH4_Upper,
+    CH5_Upper, CH6_Upper, CH7_Upper, CH8_Upper,
+    CH9_Upper, CH10_Upper, CH11_Upper, CH12_Upper,
+    CH13_Upper, CH14_Upper, CH15_Upper, CH16_Upper
     ]
 
     For iChannel = 0; iChannel < 16; iChannel = iChannel + 1 Do
-       learningIsOn = channelIsInLearningMode[iChannel]
-       LearningLowerNotes[iChannel] = learningIsOn And NoteNameToNoteNumber(LowerNotes[iChannel]) == 0
-       LearningUpperNotes[iChannel] = learningIsOn And NoteNameToNoteNumber(UpperNotes[iChannel]) == 127
+        learningIsOn = channelIsInLearningMode[iChannel]
+        LearningLowerNotes[iChannel] = learningIsOn And NoteNameToNoteNumber(LowerNotes[iChannel]) == 0
+        LearningUpperNotes[iChannel] = learningIsOn And NoteNameToNoteNumber(UpperNotes[iChannel]) == 127
     End
 End
 
 
 Initialization
-   //OpenLogWindow()
-   SetDisplayMessage("Copyright (c) 2026 Pauo V. C. Medeiros")
-   SetInfoMessage(<<<
-       Create split zones per MIDI channel.
-   >>>)
-   RefreshLowerAndUpperNoteArrays()
+    //OpenLogWindow()
+    SetDisplayMessage("Copyright (c) 2026 Pauo V. C. Medeiros")
+    SetInfoMessage(<<<
+        Create split zones per MIDI channel.
+    >>>)
+    RefreshLowerAndUpperNoteArrays()
 End
 
 
@@ -85,14 +85,14 @@ End
 
 On ParameterValueChanged(param_value : Discrete, index : Integer)
     Matching
-        CH1_Lower, CH2_Lower, CH3_Lower, CH4_Lower,
-        CH5_Lower, CH6_Lower, CH7_Lower, CH8_Lower,
-        CH9_Lower, CH10_Lower, CH11_Lower, CH12_Lower,
-        CH13_Lower, CH14_Lower, CH15_Lower, CH16_Lower,
-        CH1_Upper, CH2_Upper, CH3_Upper, CH4_Upper,
-        CH5_Upper, CH6_Upper, CH7_Upper, CH8_Upper,
-        CH9_Upper, CH10_Upper, CH11_Upper, CH12_Upper,
-        CH13_Upper, CH14_Upper, CH15_Upper, CH16_Upper
+    CH1_Lower, CH2_Lower, CH3_Lower, CH4_Lower,
+    CH5_Lower, CH6_Lower, CH7_Lower, CH8_Lower,
+    CH9_Lower, CH10_Lower, CH11_Lower, CH12_Lower,
+    CH13_Lower, CH14_Lower, CH15_Lower, CH16_Lower,
+    CH1_Upper, CH2_Upper, CH3_Upper, CH4_Upper,
+    CH5_Upper, CH6_Upper, CH7_Upper, CH8_Upper,
+    CH9_Upper, CH10_Upper, CH11_Upper, CH12_Upper,
+    CH13_Upper, CH14_Upper, CH15_Upper, CH16_Upper
 
     var
         isLowerLimitChange : Boolean = index < 16
@@ -102,11 +102,11 @@ On ParameterValueChanged(param_value : Discrete, index : Integer)
     RefreshLowerAndUpperNoteArrays()
     If (NoteNameToNoteNumber(LowerNotes[indexMod16]) > NoteNameToNoteNumber(UpperNotes[indexMod16])) Then
         If isLowerLimitChange Then
-           tempVar = LowerNotes[indexMod16]
-           UpperNotes[indexMod16] = tempVar
+            tempVar = LowerNotes[indexMod16]
+            UpperNotes[indexMod16] = tempVar
         Else
-           tempVar = UpperNotes[indexMod16]
-           LowerNotes[indexMod16] = tempVar
+            tempVar = UpperNotes[indexMod16]
+            LowerNotes[indexMod16] = tempVar
         End
         RefreshLowerAndUpperNoteArrays()
     End

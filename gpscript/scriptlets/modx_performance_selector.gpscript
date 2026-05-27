@@ -1,106 +1,106 @@
 var
-   UserBank : Subrange Parameter 1..8 = 1
-   Page : Subrange Parameter 1..16 = 1
-   Col : Parameter "A", "B", "C", "D" = "A"
-   Row : Subrange Parameter 1..4 = 1
-   AutoPartNamesSyncSwitch : Subrange Parameter 0..1 = 1
+    UserBank : Subrange Parameter 1..8 = 1
+    Page : Subrange Parameter 1..16 = 1
+    Col : Parameter "A", "B", "C", "D" = "A"
+    Row : Subrange Parameter 1..4 = 1
+    AutoPartNamesSyncSwitch : Subrange Parameter 0..1 = 1
 
 var
-   sysexDueAt : Double = 0.0
-   waiting : Boolean = false
+    sysexDueAt : Double = 0.0
+    waiting : Boolean = false
 
 
 Function ColLetterToNumber(colLetter : String) Returns Integer
-   Select
-      colLetter == "A" Do result = 1
-      colLetter == "B" Do result = 2
-      colLetter == "C" Do result = 3
-      colLetter == "D" Do result = 4
-   End
+    Select
+        colLetter == "A" Do result = 1
+        colLetter == "B" Do result = 2
+        colLetter == "C" Do result = 3
+        colLetter == "D" Do result = 4
+    End
 End
 
 
 Function RequestCurrentPerformanceName()
-   Var
-      perf_name_request : SysexMessage = # F0 43 30 7F 1C 07 30 40 00 F7
-      i : Integer
+    Var
+        perf_name_request : SysexMessage = # F0 43 30 7F 1C 07 30 40 00 F7
+        i : Integer
 
-   For i = 0; i <= 19; i = i + 1 Do
-      SM_ChangeValue(perf_name_request, 8, i)
-      SendSysexNow(perf_name_request)
-   End
+    For i = 0; i <= 19; i = i + 1 Do
+        SM_ChangeValue(perf_name_request, 8, i)
+        SendSysexNow(perf_name_request)
+    End
 End
 
 
 Function RequestAllParts()
-   Var
-      voice_name_sysex_request_base        : SysexMessage = # F0 43 20 7F 1C 07 0E 52 00 F7
-      part_switch_state_sysex_request_base : SysexMessage = # F0 43 30 7F 1C 07 31 00 16 F7
-      partIndex : Integer
+    Var
+        voice_name_sysex_request_base        : SysexMessage = # F0 43 20 7F 1C 07 0E 52 00 F7
+        part_switch_state_sysex_request_base : SysexMessage = # F0 43 30 7F 1C 07 31 00 16 F7
+        partIndex : Integer
 
-   Const
-      PART_INDEX_BYTE : Integer = 8
-      PART_SWITCH_STATUS_INDEX_BYTE : Integer = 7
+    Const
+        PART_INDEX_BYTE : Integer = 8
+        PART_SWITCH_STATUS_INDEX_BYTE : Integer = 7
 
-   For partIndex = 0; partIndex <= 7; partIndex = partIndex + 1 Do
-      SM_ChangeValue(voice_name_sysex_request_base, PART_INDEX_BYTE, partIndex)
-      SM_ChangeValue(part_switch_state_sysex_request_base, PART_SWITCH_STATUS_INDEX_BYTE, partIndex)
+    For partIndex = 0; partIndex <= 7; partIndex = partIndex + 1 Do
+        SM_ChangeValue(voice_name_sysex_request_base, PART_INDEX_BYTE, partIndex)
+        SM_ChangeValue(part_switch_state_sysex_request_base, PART_SWITCH_STATUS_INDEX_BYTE, partIndex)
 
-      SendSysexNow(part_switch_state_sysex_request_base)
-      SendSysexNow(voice_name_sysex_request_base)
-   End
+        SendSysexNow(part_switch_state_sysex_request_base)
+        SendSysexNow(voice_name_sysex_request_base)
+    End
 End
 
 
 Function ScheduleRequestAllParts()
-   sysexDueAt = TimeSinceStartup() + 50.0 
-   waiting = true
-   SetTimersRunning(true)
+    sysexDueAt = TimeSinceStartup() + 50.0
+    waiting = true
+    SetTimersRunning(true)
 End
 
 
 function SelectMODXLiveSetUserBank(userBank : Integer)
-   var
-      msg : SysexMessage
+    var
+        msg : SysexMessage
 
-   // Template: last data byte before F7 is replaced below
-   msg = # F0 43 10 7F 1C 07 09 00 00 00 F7  // The byte before F7 controls the user bank
+    // Template: last data byte before F7 is replaced below
+    msg = # F0 43 10 7F 1C 07 09 00 00 00 F7  // The byte before F7 controls the user bank
 
-   // Valid MODX User Live Set banks: User 1..User 8
-   if userBank >= 1 and userBank <= 8 then
-      SM_ChangeValue(msg, 9, userBank)
-      SendSysexNow(msg)
-   end
+    // Valid MODX User Live Set banks: User 1..User 8
+    if userBank >= 1 and userBank <= 8 then
+        SM_ChangeValue(msg, 9, userBank)
+        SendSysexNow(msg)
+    end
 end
-   
+
 
 Function SendPerformanceChangeMsg()
-   var
-      Slot : Integer = 4*(Row - 1) + ColLetterToNumber(Col)
-      MSBCurrentUserBank : Integer = 62  // Current User Live Set bank; MODX does not switch Live Set banks via this
-      LSB : Integer = Page - 1
-      PC  : Integer = Slot - 1
+    var
+        Slot : Integer = 4*(Row - 1) + ColLetterToNumber(Col)
+        MSBCurrentUserBank : Integer = 62  // Current User Live Set bank; MODX does not switch Live Set banks via this
+        LSB : Integer = Page - 1
+        PC  : Integer = Slot - 1
 
-   SelectMODXLiveSetUserBank(UserBank)
-   SendNow(MakeControlChangeMessage(0, MSBCurrentUserBank))
-   SendNow(MakeControlChangeMessage(32, LSB))
-   SendNow(MakeProgramChangeMessage(PC))
+    SelectMODXLiveSetUserBank(UserBank)
+    SendNow(MakeControlChangeMessage(0, MSBCurrentUserBank))
+    SendNow(MakeControlChangeMessage(32, LSB))
+    SendNow(MakeProgramChangeMessage(PC))
 
-   If AutoPartNamesSyncSwitch > 0 Then
-      ScheduleRequestAllParts()
-   End
+    If AutoPartNamesSyncSwitch > 0 Then
+        ScheduleRequestAllParts()
+    End
 End
 
 //---------------------------------------------------------------------
 Initialization
-   //OpenLogWindow()
-   SendPerformanceChangeMsg()
+    //OpenLogWindow()
+    SendPerformanceChangeMsg()
 End
 
 
 On Activate
-   //OpenLogWindow()
-   SendPerformanceChangeMsg()
+    //OpenLogWindow()
+    SendPerformanceChangeMsg()
 End
 
 
@@ -115,19 +115,19 @@ End
 
 
 On ParameterValueChanged matching AutoPartNamesSyncSwitch
-   If AutoPartNamesSyncSwitch > 0 Then
-      ScheduleRequestAllParts()
-   End
+    If AutoPartNamesSyncSwitch > 0 Then
+        ScheduleRequestAllParts()
+    End
 End
 
 
 On TimerTick(ms : Double)
-   If waiting And TimeSinceStartup() >= sysexDueAt Then
+    If waiting And TimeSinceStartup() >= sysexDueAt Then
 
-      RequestAllParts()
-      RequestCurrentPerformanceName()
+        RequestAllParts()
+        RequestCurrentPerformanceName()
 
-      waiting = false
-      SetTimersRunning(false)
-   End
+        waiting = false
+        SetTimersRunning(false)
+    End
 End

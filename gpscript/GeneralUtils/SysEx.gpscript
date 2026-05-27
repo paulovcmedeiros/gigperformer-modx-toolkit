@@ -2,10 +2,9 @@
 // Functions related to general SysEx message handling
 //------------------------------------------------------
 Function MODXTK_IsYamahaSysEx(sx : SysexMessage) Returns Boolean
-   // Return whether the SysEx is an Yamaha-style SysEx.
+    // Return whether the SysEx is an Yamaha-style SysEx.
     result = SM_Length(sx) >= 3
-             And SM_GetValue(sx, 0) == 0xF0
-             And SM_GetValue(sx, 1) == 0x43
-             And SM_GetValue(sx, SM_Length(sx) - 1) == 0xF7
+    And SM_GetValue(sx, 0) == 0xF0
+    And SM_GetValue(sx, 1) == 0x43
+    And SM_GetValue(sx, SM_Length(sx) - 1) == 0xF7
 End
-

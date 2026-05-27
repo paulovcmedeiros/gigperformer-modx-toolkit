@@ -14,13 +14,13 @@ End
 
 On ParameterValueChanged(param : Discrete, index : Integer)
     Matching CH1, CH2, CH3, CH4, CH5, CH6, CH7, CH8, CH9,
-             CH10, CH11, CH12, CH13, CH14, CH15, CH16
-             
+    CH10, CH11, CH12, CH13, CH14, CH15, CH16
+
     var channel : Integer = index + 1
-        message : MidiMessage
-        CC_Number : Integer
-        CC_Value : Integer
-    
+    message : MidiMessage
+    CC_Number : Integer
+    CC_Value : Integer
+
     If AF_Button == 1 Then
         CC_Number = 86
     Else
@@ -32,7 +32,7 @@ On ParameterValueChanged(param : Discrete, index : Integer)
     Else
         CC_Value = 127
     End
-    
+
     message = MakeControlChangeMessageEx(CC_Number, CC_Value, channel)
     SendNow(message)
 End
