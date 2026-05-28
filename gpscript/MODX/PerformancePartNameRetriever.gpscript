@@ -33,6 +33,7 @@ Function MODXTK_ParsePerformancePartSwitchStatusIfApplicable(sx : SysexMessage) 
         partOffset : Integer
         dataByte : Integer
         maxIndex : Integer = MODXTK_numberOfSupportedParts - 1
+        sysExHasPartInfo : Boolean = false
 
     result = false
     If SM_Length(sx) >= 11 Then
@@ -40,11 +41,12 @@ Function MODXTK_ParsePerformancePartSwitchStatusIfApplicable(sx : SysexMessage) 
         partIndex = SM_GetValue(sx, 7)
         partOffset = SM_GetValue(sx, 8)
 
-        If (msgBlock == 0x31) And (partIndex >= 0) And (partIndex <= maxIndex) And (partOffset == 0x16) Then
+        sysExHasPartInfo = (msgBlock == 0x31) And (partIndex >= 0) And (partIndex < 16)
+        If sysExHasPartInfo And (partIndex <= maxIndex) And (partOffset == 0x16) Then
             dataByte = SM_GetValue(sx, 9)
             MODXTK_partIsSwitchedOn[partIndex] = dataByte != 0
-            result = true
         End
+        result = sysExHasPartInfo
     End
 End
 
@@ -94,6 +96,7 @@ Function MODXTK_SetPerformancePartNameWidgetValueIfApplicable(sx : SysexMessage)
         partOffset : Integer
         maxIndex : Integer = MODXTK_numberOfSupportedParts - 1
         partName : String = ""
+        sysExHasPartInfo : Boolean = false
 
     result = false
     If MODXTK_IsMODXSysEx(sx) Then
@@ -103,14 +106,15 @@ Function MODXTK_SetPerformancePartNameWidgetValueIfApplicable(sx : SysexMessage)
             partIndex = SM_GetValue(sx, 9)
             partOffset = SM_GetValue(sx, 10)
 
-            If (msgBlock == 0x31) And (partIndex >= 0) And (partIndex <= maxIndex) And (partOffset == 0) Then
+            sysExHasPartInfo = (msgBlock == 0x31) And (partIndex >= 0) And (partIndex < 16)
+            If sysExHasPartInfo And (partOffset == 0) Then
                 // Set part name if part is active; clear it if inactive.
                 If MODXTK_partIsSwitchedOn[partIndex] Then
                     partName = MODXTK_ExtractPartNameFromNamePacket(sx)
                 End
                 SetWidgetLabel(MODXTK_performancePartNameWidgets[partIndex], partName)
-                result = true
             End
+            result = sysExHasPartInfo
         End
     End
 End

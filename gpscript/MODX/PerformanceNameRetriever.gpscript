@@ -3,15 +3,22 @@
 //-----------------------------------------------------------
 Var
     MODXTK_performanceNameBytesBuffer : Integer[20]
+    MODXTK_performanceNameByteReceived : Boolean[20] = [
+        false, false, false, false, false,
+        false, false, false, false, false,
+        false, false, false, false, false,
+        false, false, false, false, false
+    ]
 
 
 Function MODXTK_ClearCurrentPerformanceNameBuffer()
-    // Clear buffer used to receive partial updated to requested Performance Names.
+    // Clear buffer used to receive partial updates to requested Performance Names.
     Var
         i : Integer
 
     For i = 0; i <= 19; i = i + 1 Do
-        MODXTK_performanceNameBytesBuffer[i] = 0x20 - 1
+        MODXTK_performanceNameBytesBuffer[i] = 0
+        MODXTK_performanceNameByteReceived[i] = false
     End
 End
 
@@ -23,7 +30,7 @@ Function MODXTK_IsPerformanceNameFullyReceived() Returns Boolean
 
     result = true
     For i = 0; i <= 19; i = i + 1 Do
-        If Not MODXTK_IsAsciiChar(MODXTK_performanceNameBytesBuffer[i]) Then
+        If Not MODXTK_performanceNameByteReceived[i] Then
             result = false
         End
     End
@@ -31,17 +38,15 @@ End
 
 
 Function MODXTK_GetCurrentPerformanceName() Returns String
-    // Return full performance name built from bytes buffered from separate SysEx msgs. Use " " for non-received bytes.
+    // Return full performance name built from buffered bytes. Use " " for non-printable bytes.
     Var
         i, c : Integer
-        s : String = ""
+        s : String = "                    "
 
     For i = 0; i <= 19; i = i + 1 Do
         c = MODXTK_performanceNameBytesBuffer[i]
         If MODXTK_IsAsciiChar(c) Then
-            s = s + MODXTK_ByteToChar(c)
-        Else
-            s = s + " "
+            s = ReplaceStringSection(s, i, 1, MODXTK_ByteToChar(c))
         End
     End
 
@@ -81,6 +86,7 @@ Function MODXTK_ParsePerformanceNameReplyIfApplicable(sx : SysexMessage)  Return
 
         If (msgBlock == 0x30) And (perfNameAreaOffset == 0x40) And (charIndexOffset >= 0x00) And (charIndexOffset <= 0x13) Then
             MODXTK_performanceNameBytesBuffer[charIndexOffset] = SM_GetValue(sx, 9)
+            MODXTK_performanceNameByteReceived[charIndexOffset] = true
             result = true
         End
     End

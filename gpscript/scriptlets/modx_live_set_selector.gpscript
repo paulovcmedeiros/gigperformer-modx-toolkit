@@ -1,13 +1,15 @@
 var
-    UserBank : Subrange Parameter 1..8 = 1
+    // 1 Preset, 8 User, 8 Library banks, mapped from 0 to 16
+    LiveSetBank : Subrange Parameter 0..16 = 1
     Page : Subrange Parameter 1..16 = 1
     Col : Parameter "A", "B", "C", "D" = "A"
     Row : Subrange Parameter 1..4 = 1
     AutoPartNamesSyncSwitch : Subrange Parameter 0..1 = 1
 
 var
-    sysexDueAt : Double = 0.0
-    waiting : Boolean = false
+    partNameRequestDueDatetime : Double = 0.0
+    partNameRequestSendDelayInMs : Double = 100.0
+    waitingToSendPartNameRequest : Boolean = false
 
 
 Function ColLetterToNumber(colLetter : String) Returns Integer
@@ -25,17 +27,20 @@ Function RequestCurrentPerformanceName()
         perf_name_request : SysexMessage = # F0 43 30 7F 1C 07 30 40 00 F7
         i : Integer
 
-    For i = 0; i <= 19; i = i + 1 Do
+    Const
+        N_CHARS_IN_NAME : Integer = 20
+
+    For i = 0; i <= (N_CHARS_IN_NAME - 1); i = i + 1 Do
         SM_ChangeValue(perf_name_request, 8, i)
         SendSysexNow(perf_name_request)
     End
 End
 
 
-Function RequestAllParts()
+Function RequestPerformancePartNames()
     Var
-        voice_name_sysex_request_base        : SysexMessage = # F0 43 20 7F 1C 07 0E 52 00 F7
-        part_switch_state_sysex_request_base : SysexMessage = # F0 43 30 7F 1C 07 31 00 16 F7
+        voice_name_sysex_request_msg        : SysexMessage = # F0 43 20 7F 1C 07 0E 52 00 F7
+        part_switch_state_sysex_request_msg : SysexMessage = # F0 43 30 7F 1C 07 31 00 16 F7
         partIndex : Integer
 
     Const
@@ -43,32 +48,35 @@ Function RequestAllParts()
         PART_SWITCH_STATUS_INDEX_BYTE : Integer = 7
 
     For partIndex = 0; partIndex <= 7; partIndex = partIndex + 1 Do
-        SM_ChangeValue(voice_name_sysex_request_base, PART_INDEX_BYTE, partIndex)
-        SM_ChangeValue(part_switch_state_sysex_request_base, PART_SWITCH_STATUS_INDEX_BYTE, partIndex)
+        SM_ChangeValue(part_switch_state_sysex_request_msg, PART_SWITCH_STATUS_INDEX_BYTE, partIndex)
+        SendSysexNow(part_switch_state_sysex_request_msg)
+    End
 
-        SendSysexNow(part_switch_state_sysex_request_base)
-        SendSysexNow(voice_name_sysex_request_base)
+    For partIndex = 0; partIndex <= 7; partIndex = partIndex + 1 Do
+        SM_ChangeValue(voice_name_sysex_request_msg, PART_INDEX_BYTE, partIndex)
+        SendSysexNow(voice_name_sysex_request_msg)
     End
 End
 
 
 Function ScheduleRequestAllParts()
-    sysexDueAt = TimeSinceStartup() + 50.0
-    waiting = true
+    waitingToSendPartNameRequest = true
+    partNameRequestDueDatetime = TimeSinceStartup() + partNameRequestSendDelayInMs
     SetTimersRunning(true)
 End
 
 
-function SelectMODXLiveSetUserBank(userBank : Integer)
+function SelectMODXLiveSetBank(liveSetBank : Integer)
     var
         msg : SysexMessage
 
-    // Template: last data byte before F7 is replaced below
-    msg = # F0 43 10 7F 1C 07 09 00 00 00 F7  // The byte before F7 controls the user bank
-
-    // Valid MODX User Live Set banks: User 1..User 8
-    if userBank >= 1 and userBank <= 8 then
-        SM_ChangeValue(msg, 9, userBank)
+    // SysEx to change Live Set Bank: # F0 43 10 7F 1C 07 09 00 00 XX F7
+    //   xx = 0x00: Preset Live Set
+    //   xx = 0x01..0x08: User Live Set 1..8
+    //   xx = 0x09..0x10: Library Live Set 1..8, depending on loaded libraries
+    msg = # F0 43 10 7F 1C 07 09 00 00 00 F7
+    if liveSetBank >= 0 and liveSetBank <= 16 then
+        SM_ChangeValue(msg, 9, liveSetBank)
         SendSysexNow(msg)
     end
 end
@@ -77,12 +85,12 @@ end
 Function SendPerformanceChangeMsg()
     var
         Slot : Integer = 4*(Row - 1) + ColLetterToNumber(Col)
-        MSBCurrentUserBank : Integer = 62  // Current User Live Set bank; MODX does not switch Live Set banks via this
+        MSBLiveSet : Integer = 62  // Current Live Set bank; MODX does not switch Live Set banks via this
         LSB : Integer = Page - 1
         PC  : Integer = Slot - 1
 
-    SelectMODXLiveSetUserBank(UserBank)
-    SendNow(MakeControlChangeMessage(0, MSBCurrentUserBank))
+    SelectMODXLiveSetBank(LiveSetBank)
+    SendNow(MakeControlChangeMessage(0, MSBLiveSet))
     SendNow(MakeControlChangeMessage(32, LSB))
     SendNow(MakeProgramChangeMessage(PC))
 
@@ -113,25 +121,24 @@ On ParameterValueChanged matching Col
 End
 
 
-On ParameterValueChanged matching UserBank, Page, Row
+On ParameterValueChanged matching LiveSetBank, Page, Row
     SendPerformanceChangeMsg()
 End
 
 
 On ParameterValueChanged matching AutoPartNamesSyncSwitch
     If AutoPartNamesSyncSwitch > 0 Then
-        ScheduleRequestAllParts()
+        SendPerformanceChangeMsg()
     End
 End
 
 
 On TimerTick(ms : Double)
-    If waiting And TimeSinceStartup() >= sysexDueAt Then
-
-        RequestAllParts()
-        RequestCurrentPerformanceName()
-
-        waiting = false
+    If waitingToSendPartNameRequest And (TimeSinceStartup() >= partNameRequestDueDatetime) Then
+        waitingToSendPartNameRequest = false
         SetTimersRunning(false)
+
+        RequestPerformancePartNames()
+        RequestCurrentPerformanceName()
     End
 End
