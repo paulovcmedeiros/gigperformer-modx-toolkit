@@ -17,7 +17,6 @@ Var
     PartLabel07 : Widget
     PartLabel08 : Widget
     PerformanceNameWidget : Widget
-    SendCurrentVolumeValues : Widget
 //$</AutoDeclare>
 
 // These files must be included in this specific order

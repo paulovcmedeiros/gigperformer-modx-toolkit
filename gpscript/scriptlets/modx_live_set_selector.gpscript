@@ -1,15 +1,15 @@
-var
+Var
     // 1 Preset, 8 User, 8 Library banks, mapped from 0 to 16
     LiveSetBank : Subrange Parameter 0..16 = 1
     Page : Subrange Parameter 1..16 = 1
     Col : Parameter "A", "B", "C", "D" = "A"
     Row : Subrange Parameter 1..4 = 1
-    AutoPartNamesSyncSwitch : Subrange Parameter 0..1 = 1
+    AutoNameSyncSwitch : Subrange Parameter 0..1 = 1
 
-var
-    partNameRequestDueDatetime : Double = 0.0
-    partNameRequestSendDelayInMs : Double = 100.0
-    waitingToSendPartNameRequest : Boolean = false
+Var
+    nameSyncRequestDueDatetime : Double = 0.0
+    nameSyncRequestSendDelayInMs : Double = 100.0
+    waitingToSendNameSyncRequest : Boolean = false
 
 
 Function ColLetterToNumber(colLetter : String) Returns Integer
@@ -59,15 +59,15 @@ Function RequestPerformancePartNames()
 End
 
 
-Function ScheduleRequestAllParts()
-    waitingToSendPartNameRequest = true
-    partNameRequestDueDatetime = TimeSinceStartup() + partNameRequestSendDelayInMs
+Function ScheduleNameSyncRequest()
+    waitingToSendNameSyncRequest = true
+    nameSyncRequestDueDatetime = TimeSinceStartup() + nameSyncRequestSendDelayInMs
     SetTimersRunning(true)
 End
 
 
-function SelectMODXLiveSetBank(liveSetBank : Integer)
-    var
+Function SelectMODXLiveSetBank(liveSetBank : Integer)
+    Var
         msg : SysexMessage
 
     // SysEx to change Live Set Bank: # F0 43 10 7F 1C 07 09 00 00 XX F7
@@ -75,15 +75,15 @@ function SelectMODXLiveSetBank(liveSetBank : Integer)
     //   xx = 0x01..0x08: User Live Set 1..8
     //   xx = 0x09..0x10: Library Live Set 1..8, depending on loaded libraries
     msg = # F0 43 10 7F 1C 07 09 00 00 00 F7
-    if liveSetBank >= 0 and liveSetBank <= 16 then
+    If liveSetBank >= 0 And liveSetBank <= 16 Then
         SM_ChangeValue(msg, 9, liveSetBank)
         SendSysexNow(msg)
-    end
-end
+    End
+End
 
 
 Function SendPerformanceChangeMsg()
-    var
+    Var
         Slot : Integer = 4*(Row - 1) + ColLetterToNumber(Col)
         MSBLiveSet : Integer = 62  // Current Live Set bank; MODX does not switch Live Set banks via this
         LSB : Integer = Page - 1
@@ -94,8 +94,8 @@ Function SendPerformanceChangeMsg()
     SendNow(MakeControlChangeMessage(32, LSB))
     SendNow(MakeProgramChangeMessage(PC))
 
-    If AutoPartNamesSyncSwitch > 0 Then
-        ScheduleRequestAllParts()
+    If AutoNameSyncSwitch > 0 Then
+        ScheduleNameSyncRequest()
     End
 End
 
@@ -126,16 +126,16 @@ On ParameterValueChanged matching LiveSetBank, Page, Row
 End
 
 
-On ParameterValueChanged matching AutoPartNamesSyncSwitch
-    If AutoPartNamesSyncSwitch > 0 Then
+On ParameterValueChanged matching AutoNameSyncSwitch
+    If AutoNameSyncSwitch > 0 Then
         SendPerformanceChangeMsg()
     End
 End
 
 
 On TimerTick(ms : Double)
-    If waitingToSendPartNameRequest And (TimeSinceStartup() >= partNameRequestDueDatetime) Then
-        waitingToSendPartNameRequest = false
+    If waitingToSendNameSyncRequest And (TimeSinceStartup() >= nameSyncRequestDueDatetime) Then
+        waitingToSendNameSyncRequest = false
         SetTimersRunning(false)
 
         RequestPerformancePartNames()

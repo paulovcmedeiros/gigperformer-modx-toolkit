@@ -48,7 +48,7 @@ The scriptlets are standalone GP scriptlets:
 - `midi_channel_octaver.gpscript`: transpose notes by octave per MIDI channel.
 - `midi_channel_selector.gpscript`: allow or mute MIDI by channel.
 - `midi_channel_selector_sustain.gpscript`: route sustain by channel with optional auto-sustain.
-- `modx_performance_selector.gpscript`: select MODX Live Set performances and sync names.
+- `modx_live_set_selector.gpscript`: select MODX Live Set performances and sync names.
 - `note_velocity_monitor.gpscript`: show per-channel note velocity values.
 
 ### Gig and Rackspace Scripts
