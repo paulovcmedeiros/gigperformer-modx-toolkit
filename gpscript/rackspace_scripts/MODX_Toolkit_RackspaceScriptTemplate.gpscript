@@ -23,8 +23,8 @@ Var
 Include "gigperformer-modx-toolkit/gpscript/GeneralUtils/Byte2String"
 Include "gigperformer-modx-toolkit/gpscript/GeneralUtils/SysEx"
 Include "gigperformer-modx-toolkit/gpscript/MODX/SysEx"
-Include "gigperformer-modx-toolkit/gpscript/MODX/PerformanceNameRetriever"
-Include "gigperformer-modx-toolkit/gpscript/MODX/PerformancePartNameRetriever"
+Include "gigperformer-modx-toolkit/gpscript/MODX/PerformanceNameSysexReceiver"
+Include "gigperformer-modx-toolkit/gpscript/MODX/PerformancePartNameSysexReceiver"
 
 Initialization
     //OpenLogWindow()
