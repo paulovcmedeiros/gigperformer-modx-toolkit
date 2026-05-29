@@ -80,6 +80,9 @@ On NoteEvent(m : NoteMessage)
     If (new_octave == 0) Then
         SendNow(m)
     Else
+        // Values outside -3..3 intentionally layer the original note with a
+        // wrapped octave offset, so +/-6 doubles the original note.
+        // This is useful for creating layers without duplicating MODX parts.
         If Abs(new_octave) > 3 Then
             SendNow(m)
             new_octave = new_octave % 3

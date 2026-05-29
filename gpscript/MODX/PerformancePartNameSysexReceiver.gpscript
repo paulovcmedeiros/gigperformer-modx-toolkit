@@ -128,6 +128,8 @@ Function MODXTK_ParsePerformancePartSwitchStatusIfApplicable(sx : SysexMessage) 
         partOffset = SM_GetValue(sx, 8)
 
         sysExHasPartInfo = (msgBlock == 0x31) And (partIndex >= 0) And (partIndex < 16) And (partOffset == 0x16)
+        // Consume recognized MODX Part Switch replies for all 16 parts, even if
+        // the rackspace only declared widgets for a subset of parts.
         If sysExHasPartInfo And (partIndex <= maxIndex) And (partOffset == 0x16) Then
             dataByte = SM_GetValue(sx, 9)
             MODXTK_partIsSwitchedOn[partIndex] = dataByte != 0
@@ -165,6 +167,8 @@ Function MODXTK_ParsePerformancePartNameCharIfApplicable(sx : SysexMessage) Retu
         sysExHasPartNameInfo = (msgBlock == 0x31) And (partIndex >= 0) And (partIndex < 16)
                              And (charIndexOffset >= 0x00) And (charIndexOffset <= 0x13)
 
+        // Consume recognized MODX Part Name character replies for all 16 parts,
+        // even when only the declared widget subset is displayed.
         If sysExHasPartNameInfo And (partIndex <= maxIndex) Then
             bufferIndex = MODXTK_PartNameByteBufferIndex(partIndex, charIndexOffset)
             If partIndex < 8 Then
@@ -248,6 +252,8 @@ Function MODXTK_SetPerformancePartNameWidgetValueIfApplicable(sx : SysexMessage)
             partOffset = SM_GetValue(sx, 10)
 
             sysExHasPartInfo = (msgBlock == 0x31) And (partIndex >= 0) And (partIndex < 16)
+            // Consume recognized MODX Part Name bulk replies for all 16 parts,
+            // while updating labels only for the declared widget subset.
             If sysExHasPartInfo And (partIndex <= maxIndex) And (partOffset == 0) Then
                 // Set part name if part is active; clear it if inactive.
                 If MODXTK_partIsSwitchedOn[partIndex] Then

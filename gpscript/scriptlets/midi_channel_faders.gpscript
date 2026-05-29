@@ -1,5 +1,5 @@
 var
-    MainSwitch : Subrange Parameter 0..1 = 1
+    FadersLock : Subrange Parameter 0..1 = 0
     CH1, CH2, CH3, CH4, CH5, CH6, CH7, CH8, CH9  : Subrange Parameter 0..127 = 127
     CH10, CH11, CH12, CH13, CH14, CH15, CH16  : Subrange Parameter 0..127 = 127
     SendToAllTrigger : Subrange Parameter 0..1 = 0
@@ -44,7 +44,10 @@ On ParameterValueChanged(param : Subrange, index : Integer)
 
     var channel : Integer = index + 1
 
-    If (MainSwitch == 1) Then
+    // FadersLock prevents manual fader moves from being accepted.
+    // SendToAllTrigger intentionally bypasses this lock so stored values can
+    // still be pushed to the MODX on activation or explicit request.
+    If (FadersLock == 0) Then
         SendVolumeChangeMsg(channel)
     Elsif (param != previous_accepted_values[index]) Then
         previous_accepted_values[index] = GetSubrangePreviousValue(param)
