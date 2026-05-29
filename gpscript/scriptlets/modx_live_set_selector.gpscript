@@ -39,22 +39,28 @@ End
 
 Function RequestPerformancePartNames()
     Var
-        voice_name_sysex_request_msg        : SysexMessage = # F0 43 20 7F 1C 07 0E 52 00 F7
+        part_name_char_sysex_request_msg    : SysexMessage = # F0 43 30 7F 1C 07 31 00 00 F7
         part_switch_state_sysex_request_msg : SysexMessage = # F0 43 30 7F 1C 07 31 00 16 F7
-        partIndex : Integer
+        partIndex, charIndex : Integer
 
     Const
-        PART_INDEX_BYTE : Integer = 8
+        PART_NAME_PART_INDEX_BYTE : Integer = 7
+        PART_NAME_CHAR_INDEX_BYTE : Integer = 8
         PART_SWITCH_STATUS_INDEX_BYTE : Integer = 7
+        N_OF_PARTS : Integer = 16
+        N_CHARS_IN_NAME : Integer = 20
 
-    For partIndex = 0; partIndex <= 7; partIndex = partIndex + 1 Do
+    For partIndex = 0; partIndex < N_OF_PARTS; partIndex = partIndex + 1 Do
         SM_ChangeValue(part_switch_state_sysex_request_msg, PART_SWITCH_STATUS_INDEX_BYTE, partIndex)
         SendSysexNow(part_switch_state_sysex_request_msg)
     End
 
-    For partIndex = 0; partIndex <= 7; partIndex = partIndex + 1 Do
-        SM_ChangeValue(voice_name_sysex_request_msg, PART_INDEX_BYTE, partIndex)
-        SendSysexNow(voice_name_sysex_request_msg)
+    For partIndex = 0; partIndex < N_OF_PARTS; partIndex = partIndex + 1 Do
+        SM_ChangeValue(part_name_char_sysex_request_msg, PART_NAME_PART_INDEX_BYTE, partIndex)
+        For charIndex = 0; charIndex <= (N_CHARS_IN_NAME - 1); charIndex = charIndex + 1 Do
+            SM_ChangeValue(part_name_char_sysex_request_msg, PART_NAME_CHAR_INDEX_BYTE, charIndex)
+            SendSysexNow(part_name_char_sysex_request_msg)
+        End
     End
 End
 

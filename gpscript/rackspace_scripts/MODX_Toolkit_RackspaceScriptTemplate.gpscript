@@ -19,6 +19,15 @@ Var
     PerformanceNameWidget : Widget
 //$</AutoDeclare>
 
+Var
+    // PerformancePartNameSysexReceiver uses this array to map MODX Part indexes
+    // to label widgets. Include only the parts you want displayed, in ascending
+    // MODX Part order. Declare it before including PerformancePartNameSysexReceiver.
+    MODXTK_performancePartNameWidgets : Widget Array = [
+        PartLabel01, PartLabel02, PartLabel03, PartLabel04,
+        PartLabel05, PartLabel06, PartLabel07, PartLabel08
+    ]
+
 // These files must be included in this specific order
 Include "gigperformer-modx-toolkit/gpscript/GeneralUtils/Byte2String"
 Include "gigperformer-modx-toolkit/gpscript/GeneralUtils/SysEx"
@@ -47,9 +56,10 @@ On SysexEvent(sx : SysexMessage) From MODXInSysEx
     // with the function in this example. By doing this, you prevent unused
     // SysEx messages from being swallowed.
 
-    // Finally, we make sure knowingly unused SysEx is sent forward
-    // for eventual processing elsewhere.
-    If Not sysExConsumed Then
+    // Finally, we make sure knowingly unused non-bulk SysEx is sent forward
+    // for eventual processing elsewhere. MODX bulk dumps are write-capable if
+    // echoed back to the synth, so do not forward them by default.
+    If Not sysExConsumed And Not MODXTK_IsMODXBulkDump(sx) Then
         SendSysexInternalNow(MODXInSysEx, sx)
     End
 End

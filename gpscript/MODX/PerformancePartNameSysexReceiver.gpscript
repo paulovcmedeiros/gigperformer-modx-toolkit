@@ -1,16 +1,101 @@
 //-----------------------------------------------------------------
 // Functions related to retrieval of MODX Performance *Part* names
 //-----------------------------------------------------------------
+// This include expects the rackspace script to declare a Widget Array named
+// MODXTK_performancePartNameWidgets before including this file.
+// The array defines which Performance Part labels will be displayed, in
+// ascending MODX Part order: Part 1 at index 0, Part 2 at index 1, etc.
+//
+// Example:
+//
+// MODXTK_performancePartNameWidgets : Widget Array = [
+//     PartLabel01, PartLabel02, PartLabel03, PartLabel04,
+//     PartLabel05, PartLabel06, PartLabel07, PartLabel08
+// ]
+
+Const
+    MODXTK_N_CHARS_IN_PART_NAME : Integer = 20
+
 Var
-    MODXTK_performancePartNameWidgets : Widget Array = [
-        PartLabel01, PartLabel02, PartLabel03, PartLabel04,
-        PartLabel05, PartLabel06, PartLabel07, PartLabel08
-    ]
     MODXTK_numberOfSupportedParts : Integer = Size(MODXTK_performancePartNameWidgets)
     MODXTK_partIsSwitchedOn : Boolean Array = [
-        true, true, true, true,
-        true, true, true, true
+        true, true, true, true, true, true, true, true,
+        true, true, true, true, true, true, true, true
     ]
+    // GPScript does not currently support multidimensional arrays, and arrays
+    // are currently limited to 256 elements. A single 16-part name buffer would
+    // need 320 entries (16 parts * 20 chars), so names are split across two
+    // flattened 8-part buffers.
+    MODXTK_perfParts1To8NameBytesBuffer : Integer[160]
+    MODXTK_perfParts9To16NameBytesBuffer : Integer[160]
+    MODXTK_perfParts1To8NameByteReceived : Boolean[160]
+    MODXTK_perfParts9To16NameByteReceived : Boolean[160]
+
+
+Function MODXTK_PartNameByteBufferIndex(partIndex : Integer, charIndex : Integer) Returns Integer
+    Var
+        partIndexInRespectiveBuffer : Integer = partIndex % 8
+
+    result = (partIndexInRespectiveBuffer * MODXTK_N_CHARS_IN_PART_NAME) + charIndex
+End
+
+
+Function MODXTK_ClearPerformancePartNameBuffer(partIndex : Integer)
+    Var
+        i : Integer
+        indexInBuffer : Integer
+
+    For i = 0; i <= (MODXTK_N_CHARS_IN_PART_NAME - 1); i = i + 1 Do
+        indexInBuffer = MODXTK_PartNameByteBufferIndex(partIndex, i)
+        If partIndex < 8 Then
+            MODXTK_perfParts1To8NameBytesBuffer[indexInBuffer] = 0
+            MODXTK_perfParts1To8NameByteReceived[indexInBuffer] = false
+        Else
+            MODXTK_perfParts9To16NameBytesBuffer[indexInBuffer] = 0
+            MODXTK_perfParts9To16NameByteReceived[indexInBuffer] = false
+        End
+    End
+End
+
+
+Function MODXTK_IsPerformancePartNameFullyReceived(partIndex : Integer) Returns Boolean
+    Var
+        i, bufferArrayIndex : Integer
+        charHasBeenReceived : Boolean
+
+    result = true
+    For i = 0; i <= (MODXTK_N_CHARS_IN_PART_NAME - 1); i = i + 1 Do
+        bufferArrayIndex = MODXTK_PartNameByteBufferIndex(partIndex, i)
+        If partIndex < 8 Then
+            charHasBeenReceived = MODXTK_perfParts1To8NameByteReceived[bufferArrayIndex]
+        Else
+            charHasBeenReceived = MODXTK_perfParts9To16NameByteReceived[bufferArrayIndex]
+        End
+        If Not charHasBeenReceived Then
+            result = false
+        End
+    End
+End
+
+
+Function MODXTK_GetPerformancePartName(partIndex : Integer) Returns String
+    Var
+        i, c : Integer
+        s : String = "                    "
+
+    For i = 0; i <= (MODXTK_N_CHARS_IN_PART_NAME - 1); i = i + 1 Do
+        If partIndex < 8 Then
+            c = MODXTK_perfParts1To8NameBytesBuffer[MODXTK_PartNameByteBufferIndex(partIndex, i)]
+        Else
+            c = MODXTK_perfParts9To16NameBytesBuffer[MODXTK_PartNameByteBufferIndex(partIndex, i)]
+        End
+        If MODXTK_IsAsciiChar(c) Then
+            s = ReplaceStringSection(s, i, 1, MODXTK_ByteToChar(c))
+        End
+    End
+
+    result = TrimString(s)
+End
 
 Function MODXTK_ParsePerformancePartSwitchStatusIfApplicable(sx : SysexMessage)  Returns Boolean
     // Parse SysEx reply, look for "Single-parameter Part Switch" in it, and update MODXTK_partIsSwitchedOn if applicable.
@@ -41,12 +126,64 @@ Function MODXTK_ParsePerformancePartSwitchStatusIfApplicable(sx : SysexMessage) 
         partIndex = SM_GetValue(sx, 7)
         partOffset = SM_GetValue(sx, 8)
 
-        sysExHasPartInfo = (msgBlock == 0x31) And (partIndex >= 0) And (partIndex < 16)
+        sysExHasPartInfo = (msgBlock == 0x31) And (partIndex >= 0) And (partIndex < 16) And (partOffset == 0x16)
         If sysExHasPartInfo And (partIndex <= maxIndex) And (partOffset == 0x16) Then
             dataByte = SM_GetValue(sx, 9)
             MODXTK_partIsSwitchedOn[partIndex] = dataByte != 0
         End
         result = sysExHasPartInfo
+    End
+End
+
+
+Function MODXTK_ParsePerformancePartNameCharIfApplicable(sx : SysexMessage) Returns Boolean
+    // Parse single-parameter replies for Performance Part Name characters.
+    //
+    // Observed/expected SysEx msg format:
+    // F0 43 10 7F 1C 07 31 pp oo dd F7
+    //
+    // In this layout:
+    //   sx[6] = 0x31           --> Performance Part data block
+    //   sx[7] = pp, 0x00..0x0F --> Performance Part index
+    //   sx[8] = oo, 0x00..0x13 --> Character offset within the Part Name
+    //   sx[9] = dd             --> Character byte, interpreted as ASCII
+    Var
+        msgBlock : Integer
+        partIndex : Integer
+        charIndexOffset : Integer
+        maxIndex : Integer = MODXTK_numberOfSupportedParts - 1
+        sysExHasPartNameInfo : Boolean = false
+        bufferIndex : Integer
+
+    result = false
+    If SM_Length(sx) >= 11 Then
+        msgBlock = SM_GetValue(sx, 6)
+        partIndex = SM_GetValue(sx, 7)
+        charIndexOffset = SM_GetValue(sx, 8)
+
+        sysExHasPartNameInfo = (msgBlock == 0x31) And (partIndex >= 0) And (partIndex < 16)
+                             And (charIndexOffset >= 0x00) And (charIndexOffset <= 0x13)
+
+        If sysExHasPartNameInfo And (partIndex <= maxIndex) Then
+            bufferIndex = MODXTK_PartNameByteBufferIndex(partIndex, charIndexOffset)
+            If partIndex < 8 Then
+                MODXTK_perfParts1To8NameBytesBuffer[bufferIndex] = SM_GetValue(sx, 9)
+                MODXTK_perfParts1To8NameByteReceived[bufferIndex] = true
+            Else
+                MODXTK_perfParts9To16NameBytesBuffer[bufferIndex] = SM_GetValue(sx, 9)
+                MODXTK_perfParts9To16NameByteReceived[bufferIndex] = true
+            End
+
+            If MODXTK_IsPerformancePartNameFullyReceived(partIndex) Then
+                If MODXTK_partIsSwitchedOn[partIndex] Then
+                    SetWidgetLabel(MODXTK_performancePartNameWidgets[partIndex], MODXTK_GetPerformancePartName(partIndex))
+                Else
+                    SetWidgetLabel(MODXTK_performancePartNameWidgets[partIndex], "")
+                End
+                MODXTK_ClearPerformancePartNameBuffer(partIndex)
+            End
+        End
+        result = sysExHasPartNameInfo
     End
 End
 
@@ -99,15 +236,18 @@ Function MODXTK_SetPerformancePartNameWidgetValueIfApplicable(sx : SysexMessage)
         sysExHasPartInfo : Boolean = false
 
     result = false
-    If MODXTK_IsMODXSysEx(sx) Then
+    If  MODXTK_IsMODXSysEx(sx) Then
         result = MODXTK_ParsePerformancePartSwitchStatusIfApplicable(sx)
+        If Not result Then
+            result = MODXTK_ParsePerformancePartNameCharIfApplicable(sx)
+        End
         If SM_Length(sx) > 31 Then
             msgBlock = SM_GetValue(sx, 8)
             partIndex = SM_GetValue(sx, 9)
             partOffset = SM_GetValue(sx, 10)
 
             sysExHasPartInfo = (msgBlock == 0x31) And (partIndex >= 0) And (partIndex < 16)
-            If sysExHasPartInfo And (partOffset == 0) Then
+            If sysExHasPartInfo And (partIndex <= maxIndex) And (partOffset == 0) Then
                 // Set part name if part is active; clear it if inactive.
                 If MODXTK_partIsSwitchedOn[partIndex] Then
                     partName = MODXTK_ExtractPartNameFromNamePacket(sx)

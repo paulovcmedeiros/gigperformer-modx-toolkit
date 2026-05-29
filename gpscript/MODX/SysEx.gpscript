@@ -8,3 +8,13 @@ Function MODXTK_IsMODXSysEx(sx : SysexMessage) Returns Boolean
     And SM_GetValue(sx, 3) == 0x7F
     And SM_GetValue(sx, 4) == 0x1C
 End
+
+
+Function MODXTK_IsMODXBulkDump(sx : SysexMessage) Returns Boolean
+    // MODX bulk-dump replies are also valid bulk-write messages if echoed back
+    // to the synth, so they should not be forwarded casually.
+    result = MODXTK_IsMODXSysEx(sx)
+    And SM_Length(sx) >= 8
+    And SM_GetValue(sx, 2) >= 0x00
+    And SM_GetValue(sx, 2) <= 0x0F
+End
