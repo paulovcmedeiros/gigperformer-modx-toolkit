@@ -19,6 +19,7 @@ Initialization
     SetInfoMessage(<<<
         Send MIDI volume changes per channel.
     >>>)
+    SendToAllTrigger = 1
 End
 
 
@@ -29,6 +30,11 @@ Function SendVolumeChangeMsg(channel : Integer)
         message : MidiMessage = MakeControlChangeMessageEx(7, value, channel)
 
     SendLater(message, 50)
+End
+
+
+On Activate
+    SendToAllTrigger = 1
 End
 
 
