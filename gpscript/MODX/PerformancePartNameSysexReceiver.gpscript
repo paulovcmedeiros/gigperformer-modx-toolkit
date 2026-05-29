@@ -8,10 +8,11 @@
 //
 // Example:
 //
-// MODXTK_performancePartNameWidgets : Widget Array = [
-//     PartLabel01, PartLabel02, PartLabel03, PartLabel04,
-//     PartLabel05, PartLabel06, PartLabel07, PartLabel08
-// ]
+// Var
+//     MODXTK_performancePartNameWidgets : Widget Array = [
+//         PartLabel01, PartLabel02, PartLabel03, PartLabel04,
+//         PartLabel05, PartLabel06, PartLabel07, PartLabel08
+//     ]
 
 Const
     MODXTK_N_CHARS_IN_PART_NAME : Integer = 20

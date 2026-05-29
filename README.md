@@ -5,7 +5,7 @@
 [![Gig Performer](https://img.shields.io/badge/Gig%20Performer-tested%205.2.2-lightgrey.svg)](https://gigperformer.com)
 [![Yamaha MODX](https://img.shields.io/badge/Yamaha-MODX-lightgrey.svg)](https://yamahasynth.com/learn/modx-series-synthesizers/introducing-the-modx-music-synthesizer)
 
-Reusable GPScript components and MODX helpers extracted from my own GigPerformer/MODX live-rig workflow.
+Reusable GPScript components and MODX helpers extracted from my own Gig Performer/MODX live-rig workflow.
 The focus is MIDI routing/control, a few scriptlets, and some MODX SysEx helpers.
 
 This project is unofficial and is not affiliated with, endorsed by, or sponsored
@@ -48,13 +48,15 @@ The scriptlets are standalone GP scriptlets:
 - `midi_channel_octaver.gpscript`: transpose notes by octave per MIDI channel.
 - `midi_channel_selector.gpscript`: allow or mute MIDI by channel.
 - `midi_channel_selector_sustain.gpscript`: route sustain by channel with optional auto-sustain.
-- `modx_live_set_selector.gpscript`: select MODX Live Set performances and sync names.
+- `modx_live_set_selector.gpscript`: select MODX Live Set performances and request
+  performance/part names. To display synced names in widgets, use it together
+  with the MODX rackspace SysEx receiver/template.
 - `note_velocity_monitor.gpscript`: show per-channel note velocity values.
 
 ### Gig and Rackspace Scripts
 
 - `gig_scripts/song_change_toggle_osc_trigger.gpscript`: toggles an OSC value when the song changes.
-- `rackspace_scripts/MODX_Toolkit_RackspaceScriptTemplate.gpscript`: example rackspace script that receives MODX SysEx and updates performance/part labels.
+- `rackspace_scripts/MODX_Toolkit_RackspaceScriptTemplate.gpscript`: example rackspace script that receives MODX SysEx and updates performance/part labels. Read the comments in the script for the widgets and MIDI block names you need to adapt.
 
 ### Include Files
 
