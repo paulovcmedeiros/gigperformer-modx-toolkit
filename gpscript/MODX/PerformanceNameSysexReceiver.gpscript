@@ -1,6 +1,10 @@
 //----------------------------------------------------------
 // Functions related to retrieval of MODX Performance names
 //-----------------------------------------------------------
+// This include expects the rackspace script to declare a Widget named
+// PerformanceNameWidget before including this file. The widget displays the
+// current MODX Performance name.
+
 Var
     MODXTK_performanceNameBytesBuffer : Integer[20]
     MODXTK_performanceNameByteReceived : Boolean[20] = [

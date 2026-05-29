@@ -1,13 +1,24 @@
-// Example rackspace integration for the MODX toolkit.
-// This file is intentionally a working example, not the reusable library.
-// Reusable code lives in the include files.
+// This file provides a template/example integration between this toolkit
+// and a Gig Performer rackspace script.
+//
+// It should work as-is if you start from a blank slate. In an existing
+// Gig Performer setup, you will usually need to merge it into your own
+// rackspace script, since each rackspace has only one rackspace script and
+// callbacks cannot be isolated per component.
+//
+// The comments below call out the places users are expected to customize.
 
-// TODO: Replace these declarations by doc info telling the user about these required Widgets.
-//       This would allow the user to keep using AutoDeclare in the main script editor Window in GP.
-//$<AutoDeclare>
-// DO NOT EDIT THIS SECTION MANUALLY
 Var
+    // My MIDI In block is named MODXInSysEx because I separate regular MIDI
+    // from SysEx input. Use the name of the MIDI In block that receives MODX
+    // SysEx in your own rackspace, or name your block MODXInSysEx to match this
+    // template.
     MODXInSysEx : MidiInBlock
+
+Var
+    // These widgets display MODX Performance Part names. This template uses 8,
+    // but you can declare up to 16 and name them however you like. Declare them
+    // before MODXTK_performancePartNameWidgets.
     PartLabel01 : Widget
     PartLabel02 : Widget
     PartLabel03 : Widget
@@ -16,17 +27,20 @@ Var
     PartLabel06 : Widget
     PartLabel07 : Widget
     PartLabel08 : Widget
-    PerformanceNameWidget : Widget
-//$</AutoDeclare>
 
-Var
     // PerformancePartNameSysexReceiver uses this array to map MODX Part indexes
-    // to label widgets. Include only the parts you want displayed, in ascending
-    // MODX Part order. Declare it before including PerformancePartNameSysexReceiver.
+    // to label widgets. Include only the widgets for the parts you want displayed,
+    // in ascending MODX Part order. Declare it before including
+    // PerformancePartNameSysexReceiver.
     MODXTK_performancePartNameWidgets : Widget Array = [
         PartLabel01, PartLabel02, PartLabel03, PartLabel04,
         PartLabel05, PartLabel06, PartLabel07, PartLabel08
     ]
+
+    // PerformanceNameSysexReceiver uses this widget to display the current MODX
+    // Performance name. Declare it before including PerformanceNameSysexReceiver.
+    PerformanceNameWidget : Widget
+
 
 // These files must be included in this specific order
 Include "gigperformer-modx-toolkit/gpscript/GeneralUtils/Byte2String"
