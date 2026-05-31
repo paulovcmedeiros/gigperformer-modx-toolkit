@@ -1,0 +1,133 @@
+Var
+    PresetName("Preset"): Discrete Parameter
+        "Move to Select a Preset",
+        "Jazz Lead (Jimmy Smith)",
+        "Percussive Jazz",
+        "Blues Organ",
+        "Full Rock Organ",
+        "Groove Holmes-style",
+        "Booker T / Green Onions",
+        "Theater / Pop",
+        "Soft Flute"
+        = "Jazz Lead (Jimmy Smith)"
+
+    Draw1, Draw2, Draw3 : Subrange Parameter 0..8 = 8
+    Draw4, Draw5, Draw6, Draw7, Draw8, Draw9 : Subrange Parameter 0..8 = 0
+    Bars1To8ModxPartNumber   : Subrange Parameter 1..16 = 10
+    Bar9ModxPartNumber       : Subrange Parameter 1..16 = 11
+    ManualSendRequester      : Subrange Parameter 0..1 = 0
+
+
+Var
+    isPresetChange : Boolean = false
+    DrawbarsArray : Subrange Array = [
+        Draw1, Draw2, Draw3, Draw4,
+        Draw5, Draw6, Draw7, Draw8, Draw9
+    ]
+    PresetDrawbarConfigs : Integer Array = [
+        0, 0, 0, 0, 0, 0, 0, 0, 0, // No preset, line added to simplify indexing
+        8, 8, 8, 0, 0, 0, 0, 0, 0, // Jazz Lead (Jimmy Smith)
+        8, 3, 8, 0, 0, 0, 0, 0, 8, // Percussive Jazz
+        8, 6, 8, 6, 0, 0, 0, 0, 0, // Blues Organ
+        8, 8, 8, 8, 8, 8, 8, 8, 8, // Full Rock Organ
+        8, 8, 8, 0, 0, 0, 0, 0, 8, // Groove Holmes-style
+        8, 8, 8, 8, 0, 0, 0, 0, 0, // Booker T / Green Onions
+        0, 0, 8, 6, 0, 0, 0, 0, 0, // Theater / Pop
+        0, 0, 8, 0, 0, 0, 0, 0, 0  // Soft Flute
+    ]
+
+
+Function SendDrawbarValue(index : Integer, drawbarValue : Integer)
+    // Send the drawbar value to the MODX Part and MIDI CC mapped to index.
+    // The MODX "All 9 Bars!" Performance maps bars 1-8 to one Part and bar 9
+    // to a separate Part, with bar 9 reusing the first CC number.
+    Var
+        ch : Integer
+        cc : Integer = (index % 8) + 17
+        midiValue : Integer = ScaleInt(drawbarValue, 0, 8, 0, 127)
+        msg : ControlChangeMessage
+
+    If index < 8 Then
+        ch = Bars1To8ModxPartNumber
+    Else
+        ch = Bar9ModxPartNumber
+    End
+
+    msg = MakeControlChangeMessageEx(cc, midiValue, ch)
+    SendNow(msg)
+End
+
+
+Function SendCurrentDrawbarValues()
+    // Send the current value of every drawbar to the MODX.
+    Var
+        index : Integer
+
+    For index = 0; index < Size(DrawbarsArray); index = index + 1 Do
+        SendDrawbarValue(index, DrawbarsArray[index])
+    End
+End
+
+
+//----------------------------------------------
+Initialization
+    //OpenLogWindow()
+    SetDisplayMessage("Copyright (c) 2026 Paulo V. C. Medeiros")
+    SetInfoMessage(<<<
+        Control the drawbars of a MODX organ Performance.
+        Based on the MODX "All 9 Bars!" Performance.
+        Bars 1-8 and bar 9 must target different MODX Parts because bar 9 reuses the CC for bar 1.
+    >>>)
+    SendCurrentDrawbarValues()
+End
+
+
+On Activate
+    SendCurrentDrawbarValues()
+End
+
+
+On ParameterValueChanged(param_value : Subrange, index : Integer)
+    Matching
+        Draw1, Draw2, Draw3, Draw4,
+        Draw5, Draw6, Draw7, Draw8, Draw9
+
+    If !isPresetChange Then
+        PresetName = "Move to Select a Preset"
+    End
+    SendDrawbarValue(index, param_value)
+End
+
+
+On ParameterValueChanged matching ManualSendRequester
+    If ManualSendRequester > 0 Then
+        ManualSendRequester = 0
+        SendCurrentDrawbarValues()
+    End
+End
+
+
+On ParameterValueChanged matching Bars1To8ModxPartNumber, Bar9ModxPartNumber
+    SendCurrentDrawbarValues()
+End
+
+
+On ParameterValueChanged matching PresetName
+    Var
+        iDrawbar, iValue : Integer
+        presetIndex : Integer = GetIndexOfDiscreteParameterItem(PresetName, PresetName)
+        nDrawbars : Integer = Size(DrawbarsArray)
+        presetDataIndexStart : Integer = presetIndex * nDrawbars
+        newValue : Integer
+
+    If PresetName != "Move to Select a Preset" Then
+        isPresetChange = true
+        For iDrawbar = 0; iDrawbar < nDrawbars; iDrawbar = iDrawbar + 1 Do
+            iValue = presetDataIndexStart + iDrawbar
+            newValue = PresetDrawbarConfigs[iValue]
+            DrawbarsArray[iDrawbar] = newValue
+        End
+        isPresetChange = false
+        SendCurrentDrawbarValues()
+    End
+End
