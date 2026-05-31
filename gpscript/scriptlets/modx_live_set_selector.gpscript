@@ -4,7 +4,7 @@ Var
     Page : Subrange Parameter 1..16 = 1
     Col : Parameter "A", "B", "C", "D" = "A"
     Row : Subrange Parameter 1..4 = 1
-    AutoNameSyncSwitch : Subrange Parameter 0..1 = 1
+    ManualSyncRequestSender : Subrange Parameter 0..1 = 0
 
 Var
     nameSyncRequestDueDatetime : Double = 0.0
@@ -99,42 +99,45 @@ Function SendPerformanceChangeMsg()
     SendNow(MakeControlChangeMessage(0, MSBLiveSet))
     SendNow(MakeControlChangeMessage(32, LSB))
     SendNow(MakeProgramChangeMessage(PC))
-
-    If AutoNameSyncSwitch > 0 Then
-        ScheduleNameSyncRequest()
-    End
 End
+
+
+Function SendPerformanceSyncMsgs()
+    SendPerformanceChangeMsg()
+    ScheduleNameSyncRequest()
+End
+
 
 //---------------------------------------------------------------------
 Initialization
     //OpenLogWindow()
     SetDisplayMessage("Copyright (c) 2026 Paulo V. C. Medeiros")
     SetInfoMessage(<<<
-        Select MODX Live Set performances and sync names.
+        Select MODX Live Set performances and request sync of Performance and Part names.
     >>>)
-    SendPerformanceChangeMsg()
+    SendPerformanceSyncMsgs()
 End
 
 
 On Activate
-    //OpenLogWindow()
-    SendPerformanceChangeMsg()
+    SendPerformanceSyncMsgs()
 End
 
 
 On ParameterValueChanged matching Col
-    SendPerformanceChangeMsg()
+    SendPerformanceSyncMsgs()
 End
 
 
 On ParameterValueChanged matching LiveSetBank, Page, Row
-    SendPerformanceChangeMsg()
+    SendPerformanceSyncMsgs()
 End
 
 
-On ParameterValueChanged matching AutoNameSyncSwitch
-    If AutoNameSyncSwitch > 0 Then
-        SendPerformanceChangeMsg()
+On ParameterValueChanged matching ManualSyncRequestSender
+    If ManualSyncRequestSender > 0 Then
+        SendPerformanceSyncMsgs()
+        ManualSyncRequestSender = 0
     End
 End
 
