@@ -24,7 +24,7 @@ Function IsReleaseMessage(m : MidiMessage) Returns Boolean
     End
 
     result = IsNoteOff(m)
-        Or (IsNoteOn(m) And (GetVelocity(m) == 0))
+        Or (IsNoteOn(m) And (GetByte(m, 2) == 0))
         Or (isCC And (ccNumber == 64) And (ccValue < 64))  // Sustain Pedal Off
         Or (isCC And (ccNumber == 120))                    // All Sound Off
         Or (isCC And (ccNumber == 121))                    // Reset All Controllers
