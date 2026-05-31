@@ -39,6 +39,7 @@ The files under `gpscript/scriptlets/` are meant to be used as standalone GP scr
 - `modx_live_set_selector.gpscript`: select MODX Live Set performances and request
   performance/part names. To display synced names in widgets, use it together
   with the MODX rackspace SysEx receiver/template.
+- `modx_organ_controllers.gpscript`: control drawbars for the MODX "All 9 Bars!" organ Performance.
 - `note_velocity_monitor.gpscript`: show per-channel note velocity values.
 
 ### Gig and Rackspace Scripts
