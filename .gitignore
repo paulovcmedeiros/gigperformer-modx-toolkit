@@ -31,23 +31,6 @@ Desktop.ini
 .ccls-cache/
 
 # ----------------------------------------------------------------------
-# Python tooling, if helper scripts are added later
-# ----------------------------------------------------------------------
-__pycache__/
-*.py[cod]
-*.pyo
-*.pyd
-.pytest_cache/
-.mypy_cache/
-.ruff_cache/
-.venv/
-venv/
-env/
-dist/
-build/
-*.egg-info/
-
-# ----------------------------------------------------------------------
 # Logs and temporary files
 # ----------------------------------------------------------------------
 *.log
