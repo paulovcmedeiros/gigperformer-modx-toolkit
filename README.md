@@ -45,7 +45,7 @@ The scriptlets are standalone GP scriptlets:
 - `assignable_function_buttons.gpscript`: send MODX AF1/AF2 state per MIDI channel.
 - `keyboard_splitter.gpscript`: create split zones per MIDI channel.
 - `midi_channel_faders.gpscript`: send MIDI volume changes per channel.
-- `midi_channel_octaver.gpscript`: transpose notes by octave per MIDI channel.
+- `midi_channel_octaver.gpscript`: transpose or add octave layers per MIDI channel.
 - `midi_channel_selector.gpscript`: allow or mute MIDI by channel.
 - `midi_channel_selector_sustain.gpscript`: route sustain by channel with optional auto-sustain.
 - `modx_live_set_selector.gpscript`: select MODX Live Set performances and request
