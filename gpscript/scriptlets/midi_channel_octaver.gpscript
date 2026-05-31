@@ -50,7 +50,7 @@ Function RefreshIntParamAllValues()
         i : Integer
 
     For i=0; i<Size(currentParamCenteredIntValues); i=i+1 Do
-	    RefreshIntParamValue(i)
+        RefreshIntParamValue(i)
     End
 End
 

@@ -9,6 +9,22 @@ This is a collection of reusable GPScript utilities and MODX helpers developed f
 
 The project reflects my own gigging needs and preferences, but I try to keep the scripts as reusable and general as my free time allows. I hope they are also useful to other GP/MODX users.
 
+## Example Setup
+
+Here is how I use the toolkit in my own Gig Performer setup. The main panel brings
+together MODX Performance selection, per-channel controls, keyboard splits, and octave
+settings:
+
+![Example Gig Performer main panel using the toolkit](docs/images/gig-performer-main-panel.png)
+
+The organ panel exposes the drawbar controls for the MODX "All 9 Bars!" Performance:
+
+![Example Gig Performer organ panel using the toolkit](docs/images/gig-performer-organ-panel.png)
+
+Behind the panels, the scriptlets are connected in the wiring view:
+
+![Example Gig Performer wiring view using the toolkit](docs/images/gig-performer-wiring.png)
+
 ## Status
 
 Early development. Public API changes and repo structure are still likely to occur.
