@@ -1,7 +1,14 @@
-var
+Var
     AF_Button: Subrange Parameter 1..2 = 1
     CH1, CH2, CH3, CH4, CH5, CH6, CH7, CH8,
-    CH9, CH10, CH11, CH12, CH13, CH14, CH15, CH16  : Discrete Parameter "OFF", "ON" = "ON"
+    CH9, CH10, CH11, CH12, CH13, CH14, CH15, CH16  : Discrete Parameter "OFF", "ON" = "OFF"
+    ManualSendRequester : Subrange Parameter 0..1 = 0
+
+Var
+    afButtonsArray : Discrete Array = [
+        CH1, CH2, CH3, CH4, CH5, CH6, CH7, CH8,
+        CH9, CH10, CH11, CH12, CH13, CH14, CH15, CH16
+    ]
 
 Initialization
     //OpenLogWindow()
@@ -9,17 +16,17 @@ Initialization
     SetInfoMessage(<<<
         Send MODX AF1 or AF2 state per MIDI channel.
     >>>)
+    ManualSendRequester = 1
 End
 
 
-On ParameterValueChanged(param : Discrete, index : Integer)
-    Matching CH1, CH2, CH3, CH4, CH5, CH6, CH7, CH8, CH9,
-    CH10, CH11, CH12, CH13, CH14, CH15, CH16
-
-    var channel : Integer = index + 1
-    message : MidiMessage
-    CC_Number : Integer
-    CC_Value : Integer
+Function SendAfButtonChangeMsg(index : Integer)
+    var
+        channel : Integer = index + 1
+        paramValue : String
+        message : MidiMessage
+        CC_Number : Integer
+        CC_Value : Integer
 
     If AF_Button == 1 Then
         CC_Number = 86
@@ -27,12 +34,42 @@ On ParameterValueChanged(param : Discrete, index : Integer)
         CC_Number = 87
     End
 
-    If param == "OFF" Then
+    paramValue = afButtonsArray[index]
+    Print(paramValue)
+    If paramValue == "OFF" Then
         CC_Value = 0
     Else
         CC_Value = 127
     End
 
     message = MakeControlChangeMessageEx(CC_Number, CC_Value, channel)
-    SendNow(message)
+    SendLater(message, 50)
+End
+
+
+On Activate
+    ManualSendRequester = 1
+End
+
+
+On ParameterValueChanged matching ManualSendRequester
+    Var
+        index : Integer
+
+    If ManualSendRequester > 0 Then
+        ManualSendRequester = 0
+
+        For index = 0; index < 16; index = index + 1 Do
+            SendAfButtonChangeMsg(index)
+        End
+    End
+End
+
+
+On ParameterValueChanged(param : Discrete, index : Integer)
+    Matching
+        CH1, CH2, CH3, CH4, CH5, CH6, CH7, CH8, CH9,
+        CH10, CH11, CH12, CH13, CH14, CH15, CH16
+
+    SendAfButtonChangeMsg(index)
 End
