@@ -1,5 +1,5 @@
 var
-    LearnTogglesMode : Discrete Parameter "OFF", "ON" = "OFF"
+    LearnTogglesMode : Discrete Parameter "Reset", "Learn" = "Reset"
 
 CH1_Lower_Toggle, CH2_Lower_Toggle, CH3_Lower_Toggle, CH4_Lower_Toggle,
 CH5_Lower_Toggle, CH6_Lower_Toggle, CH7_Lower_Toggle, CH8_Lower_Toggle,
@@ -75,7 +75,7 @@ On ParameterValueChanged(param_value : Discrete, index : Integer)
         isLower : Boolean = index < 16
         channelIndex : Integer = index % 16
 
-    If (param_value == "ON") And (LearnTogglesMode == "OFF") Then
+    If (param_value == "ON") And (LearnTogglesMode == "Reset") Then
         If isLower Then
             LowerNotes[channelIndex] = "C-2"
         Else
@@ -94,7 +94,7 @@ On NoteEvent(m : NoteMessage)
         noteName, newLower, newUpper  : String
         anyLearningHappened : Boolean = false
 
-    If (LearnTogglesMode == "ON") And IsNoteOn(m) And (GetVelocity(m) > 0) Then
+    If (LearnTogglesMode == "Learn") And IsNoteOn(m) And (GetVelocity(m) > 0) Then
         noteName = NoteNumberToNoteName(note_number)
         For iChannel = 0; iChannel < 16; iChannel = iChannel + 1 Do
             If LearningLowerNotes[iChannel] == "ON" Then
