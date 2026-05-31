@@ -1,3 +1,6 @@
+Include "gigperformer-modx-toolkit/gpscript/GeneralUtils/Midi"
+
+
 var
     LearnTogglesMode : Discrete Parameter "Reset", "Learn" = "Reset"
 
@@ -122,7 +125,8 @@ On NoteEvent(m : NoteMessage)
         note_channel = GetChannel(m)
         LowerLimit = NoteNameToNoteNumber(LowerNotes[note_channel - 1])
         UpperLimit = NoteNameToNoteNumber(UpperNotes[note_channel - 1])
-        If ((note_number >= LowerLimit) and (note_number <= UpperLimit)) Then
+        If MODXTK_IsReleaseMidiMessage(m)
+            Or ((note_number >= LowerLimit) And (note_number <= UpperLimit)) Then
             SendNow(m)
         End
     End

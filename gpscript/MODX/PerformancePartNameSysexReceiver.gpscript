@@ -18,7 +18,7 @@ Const
     MODXTK_N_CHARS_IN_PART_NAME : Integer = 20
 
 Var
-    MODXTK_numberOfSupportedParts : Integer = Size(MODXTK_performancePartNameWidgets)
+    MODXTK_numberOfUserSuppliedParts : Integer = Size(MODXTK_performancePartNameWidgets)
     MODXTK_partIsSwitchedOn : Boolean Array = [
         true, true, true, true, true, true, true, true,
         true, true, true, true, true, true, true, true
@@ -99,7 +99,8 @@ Function MODXTK_GetPerformancePartName(partIndex : Integer) Returns String
 End
 
 Function MODXTK_ParsePerformancePartSwitchStatusIfApplicable(sx : SysexMessage)  Returns Boolean
-    // Parse SysEx reply, look for "Single-parameter Part Switch" in it, and update MODXTK_partIsSwitchedOn if applicable.
+    // Parse SysEx reply, look for "Single-parameter Part Switch" in it,
+    // and update MODXTK_partIsSwitchedOn if applicable.
     //
     // Observed SysEx msg format:
     // F0 43 10 7F 1C 07 31 pp 16 dd F7
@@ -118,7 +119,6 @@ Function MODXTK_ParsePerformancePartSwitchStatusIfApplicable(sx : SysexMessage) 
         partIndex : Integer
         partOffset : Integer
         dataByte : Integer
-        maxIndex : Integer = MODXTK_numberOfSupportedParts - 1
         sysExHasPartInfo : Boolean = false
 
     result = false
@@ -130,7 +130,7 @@ Function MODXTK_ParsePerformancePartSwitchStatusIfApplicable(sx : SysexMessage) 
         sysExHasPartInfo = (msgBlock == 0x31) And (partIndex >= 0) And (partIndex < 16) And (partOffset == 0x16)
         // Consume recognized MODX Part Switch replies for all 16 parts, even if
         // the rackspace only declared widgets for a subset of parts.
-        If sysExHasPartInfo And (partIndex <= maxIndex) And (partOffset == 0x16) Then
+        If sysExHasPartInfo And (partIndex < MODXTK_numberOfUserSuppliedParts) Then
             dataByte = SM_GetValue(sx, 9)
             MODXTK_partIsSwitchedOn[partIndex] = dataByte != 0
         End
@@ -154,7 +154,6 @@ Function MODXTK_ParsePerformancePartNameCharIfApplicable(sx : SysexMessage) Retu
         msgBlock : Integer
         partIndex : Integer
         charIndexOffset : Integer
-        maxIndex : Integer = MODXTK_numberOfSupportedParts - 1
         sysExHasPartNameInfo : Boolean = false
         bufferIndex : Integer
 
@@ -169,7 +168,7 @@ Function MODXTK_ParsePerformancePartNameCharIfApplicable(sx : SysexMessage) Retu
 
         // Consume recognized MODX Part Name character replies for all 16 parts,
         // even when only the declared widget subset is displayed.
-        If sysExHasPartNameInfo And (partIndex <= maxIndex) Then
+        If sysExHasPartNameInfo And (partIndex < MODXTK_numberOfUserSuppliedParts) Then
             bufferIndex = MODXTK_PartNameByteBufferIndex(partIndex, charIndexOffset)
             If partIndex < 8 Then
                 MODXTK_perfParts1To8NameBytesBuffer[bufferIndex] = SM_GetValue(sx, 9)
@@ -236,7 +235,6 @@ Function MODXTK_SetPerformancePartNameWidgetValueIfApplicable(sx : SysexMessage)
         msgBlock : Integer
         partIndex : Integer
         partOffset : Integer
-        maxIndex : Integer = MODXTK_numberOfSupportedParts - 1
         partName : String = ""
         sysExHasPartInfo : Boolean = false
 
@@ -251,10 +249,10 @@ Function MODXTK_SetPerformancePartNameWidgetValueIfApplicable(sx : SysexMessage)
             partIndex = SM_GetValue(sx, 9)
             partOffset = SM_GetValue(sx, 10)
 
-            sysExHasPartInfo = (msgBlock == 0x31) And (partIndex >= 0) And (partIndex < 16)
+            sysExHasPartInfo = (msgBlock == 0x31) And (partIndex >= 0) And (partIndex < 16) And (partOffset == 0)
             // Consume recognized MODX Part Name bulk replies for all 16 parts,
             // while updating labels only for the declared widget subset.
-            If sysExHasPartInfo And (partIndex <= maxIndex) And (partOffset == 0) Then
+            If sysExHasPartInfo And (partIndex < MODXTK_numberOfUserSuppliedParts) Then
                 // Set part name if part is active; clear it if inactive.
                 If MODXTK_partIsSwitchedOn[partIndex] Then
                     partName = MODXTK_ExtractPartNameFromNamePacket(sx)

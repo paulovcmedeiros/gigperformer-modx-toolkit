@@ -61,8 +61,8 @@ The scriptlets are standalone GP scriptlets:
 ### Include Files
 
 The `MODX/` and `GeneralUtils/` folders contain reusable include files used by
-the rackspace template and available for MODX-related scripts. They are not
-meant to be loaded as standalone scripts.
+the rackspace template and scriptlets. They are not meant to be loaded as
+standalone scripts.
 
 ## Using The Files
 

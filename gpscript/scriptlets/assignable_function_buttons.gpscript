@@ -35,7 +35,6 @@ Function SendAfButtonChangeMsg(index : Integer)
     End
 
     paramValue = afButtonsArray[index]
-    Print(paramValue)
     If paramValue == "OFF" Then
         CC_Value = 0
     Else

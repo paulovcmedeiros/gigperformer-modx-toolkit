@@ -1,0 +1,22 @@
+Function MODXTK_IsReleaseMidiMessage(m : MidiMessage) Autotype Returns Boolean
+    // Return whether m fully releases notes or resets controllers.
+    Var
+        isCC : Boolean = IsController(m)
+        cc : ControlChangeMessage
+        ccNumber, ccValue : Integer
+
+    If isCC Then
+        cc = ReinterpretAsControllerMessage(m)
+        ccNumber = GetCCNumber(cc)
+        ccValue = GetCCValue(cc)
+    End
+
+    result = IsNoteOff(m)
+        Or (IsNoteOn(m) And (GetByte(m, 2) == 0))
+        // Half-pedal sustain uses intermediate CC64 values continuously, so only
+        // value 0 counts as fully off instead of the MIDI switch range 0..63.
+        Or (isCC And (ccNumber == 64) And (ccValue == 0))  // Sustain Pedal Fully Off
+        Or (isCC And (ccNumber == 120))                    // All Sound Off
+        Or (isCC And (ccNumber == 121))                    // Reset All Controllers
+        Or (isCC And (ccNumber == 123))                    // All Notes Off
+End
