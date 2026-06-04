@@ -14,6 +14,10 @@ Var
         CH1, CH2, CH3, CH4, CH5, CH6, CH7, CH8, CH9,
         CH10, CH11, CH12, CH13, CH14, CH15, CH16
     ]
+    octM3sentNotesTracker, octM2sentNotesTracker, octM1sentNotesTracker,
+    oct0sentNotesTracker,
+    octP1sentNotesTracker, octP2sentNotesTracker, octP3sentNotesTracker:
+        MultiChannelNoteTracker
 
     // Map the string parameter values to integers centered at 0:
     //    - "0 Oct" maps to 0.
@@ -37,7 +41,9 @@ Function RefreshIntParamValue(paramIndex : Integer)
     // Refresh the cached integer value for the parameter at paramIndex.
     Var
         newOctaveAsStringParam : String = octaveParams[paramIndex]
-        paramValueIndexInEnum : Integer = GetIndexOfDiscreteParameterItem(octaveParams[paramIndex], newOctaveAsStringParam)
+        paramValueIndexInEnum : Integer = GetIndexOfDiscreteParameterItem(
+            octaveParams[paramIndex], newOctaveAsStringParam
+        )
         newIntValue : Integer = paramValueIndexInEnum - 6
 
     currentParamCenteredIntValues[paramIndex] = newIntValue
@@ -55,10 +61,103 @@ Function RefreshIntParamAllValues()
 End
 
 
-Function KillAllNotes(channel : Integer)
-    // Stop all notes and release the sustain pedal on channel.
-    SendNow(MakeControlChangeMessageEx(123, 0, channel))  // All Notes Off
-    SendNow(MakeControlChangeMessageEx(64, 0, channel))  // Sustain Pedal Off
+Function SendTrackedNote(m : NoteMessage, octaveShift : Integer)
+    // Send note message at the specified octave shift and track in which octave(s) it was sent.
+    //
+    // We use the note trackers when receiving NoteOff events.
+    Var
+        octaveShiftedNote : NoteMessage
+
+    If IsNoteOn(m) And (GetVelocity(m) == 0) Then
+        m = ReinterpretAsNoteOffMessage(m)
+    End
+
+    If octaveShift == 0 Then
+        SendNow(m)
+    Else
+        octaveShiftedNote = WithTranspose(m, 12 * octaveShift)
+        SendNow(octaveShiftedNote)
+    End
+
+    Select
+        octaveShift == -3 do
+            MultiChannelNoteTracker_GotMidiMessage(octM3sentNotesTracker, m)
+        octaveShift == -2 do
+            MultiChannelNoteTracker_GotMidiMessage(octM2sentNotesTracker, m)
+        octaveShift == -1 do
+            MultiChannelNoteTracker_GotMidiMessage(octM1sentNotesTracker, m)
+        octaveShift == 0 do
+            MultiChannelNoteTracker_GotMidiMessage(oct0sentNotesTracker, m)
+        octaveShift == 1 do
+            MultiChannelNoteTracker_GotMidiMessage(octP1sentNotesTracker, m)
+        octaveShift == 2 do
+            MultiChannelNoteTracker_GotMidiMessage(octP2sentNotesTracker, m)
+        octaveShift == 3 do
+            MultiChannelNoteTracker_GotMidiMessage(octP3sentNotesTracker, m)
+    End
+End
+
+Function GetOctaveForCenteredParamValue(centeredParamValue : Integer) Returns Integer
+    // Get the octave shift value corresponding to the input centeredParamValue
+    Var
+        isLayer : Boolean = Abs(centeredParamValue) > 3
+
+    If isLayer Then
+        If centeredParamValue > 0 Then
+            result = centeredParamValue - 3
+        Else
+            result = centeredParamValue + 3
+        End
+    Else
+        result = centeredParamValue
+    End
+End
+
+
+Function HandleNoteOffEvent(m : NoteMessage)
+    // Use the note trackers so that we turn off all notes that must be turned off,
+    // even if the octave settings change while there are held notes.
+    //
+    // By doing it like this, we avoid stuck notes upon octave settings changes while
+    // holding notes, without the need to kill all notes upon such param changes.
+    //
+    // N.B.: If the same note/channel overlaps across different octave settings, then
+    // a single NoteOff may release all matching tracked octaves. One way to cover this
+    // case would be, e.g., to track a "per-note stack" of sent octave shifts, but this
+    // would increase implementation complexity quite a bit. For the moment, I consider
+    // that edge case acceptable in order to keep the implementation simple.
+
+    Var
+        noteNumber : Integer = GetNoteNumber(m)
+        channel : Integer = GetChannel(m)
+
+    If MultiChannelNoteTracker_IsNoteOffPending(octM3sentNotesTracker, noteNumber, channel) Then
+        SendTrackedNote(m, -3)
+    End
+
+    If MultiChannelNoteTracker_IsNoteOffPending(octM2sentNotesTracker, noteNumber, channel) Then
+        SendTrackedNote(m, -2)
+    End
+
+    If MultiChannelNoteTracker_IsNoteOffPending(octM1sentNotesTracker, noteNumber, channel) Then
+        SendTrackedNote(m, -1)
+    End
+
+    If MultiChannelNoteTracker_IsNoteOffPending(oct0sentNotesTracker, noteNumber, channel) Then
+        SendTrackedNote(m, 0)
+    End
+
+    If MultiChannelNoteTracker_IsNoteOffPending(octP1sentNotesTracker, noteNumber, channel) Then
+        SendTrackedNote(m, 1)
+    End
+
+    If MultiChannelNoteTracker_IsNoteOffPending(octP2sentNotesTracker, noteNumber, channel) Then
+        SendTrackedNote(m, 2)
+    End
+
+    If MultiChannelNoteTracker_IsNoteOffPending(octP3sentNotesTracker, noteNumber, channel) Then
+        SendTrackedNote(m, 3)
+    End
 End
 
 
@@ -77,17 +176,12 @@ On Activate
     RefreshIntParamAllValues()
 End
 
-
 On ParameterValueChanged(param : Discrete, index : Integer)
     Matching
         CH1, CH2, CH3, CH4, CH5, CH6, CH7, CH8, CH9,
         CH10, CH11, CH12, CH13, CH14, CH15, CH16
 
-    Var
-        channel : Integer = index + 1
-
-    KillAllNotes(channel)
-    RefreshIntParamValue(index)
+    RefreshIntParamAllValues()
 End
 
 
@@ -95,23 +189,21 @@ On NoteEvent(m : NoteMessage)
     Var
         channel : Integer = GetChannel(m)
         paramIndex : Integer = channel - 1
-        newOctaveIntValue : Integer = currentParamCenteredIntValues[paramIndex]
-        isLayer : Boolean = Abs(newOctaveIntValue) > 3
+        centeredParamValue : Integer = currentParamCenteredIntValues[paramIndex]
+        isLayer : Boolean = Abs(centeredParamValue) > 3
+        octaveShift : Integer = GetOctaveForCenteredParamValue(centeredParamValue)
 
-    If (newOctaveIntValue == 0) Or isLayer Then
-        // Send the original note when unchanged or layered.
-        SendNow(m)
-    End
-
-    If isLayer Then
-        If newOctaveIntValue > 0 Then
-            newOctaveIntValue = newOctaveIntValue - 3
-        Else
-            newOctaveIntValue = newOctaveIntValue + 3
+    If IsNoteOff(m) Or (IsNoteOn(m) And (GetVelocity(m) == 0)) Then
+        // Some implementations send NoteOff as "NoteOn with 0 velocity"
+        HandleNoteOffEvent(m)
+    Else
+        If (octaveShift == 0) Or isLayer Then
+            // Send the original note when unchanged or layered.
+            SendTrackedNote(m, 0)
         End
-    End
 
-    If (newOctaveIntValue != 0) Then
-        SendNow(WithTranspose(m, 12 * newOctaveIntValue))
+        If (octaveShift != 0) Then
+            SendTrackedNote(m, octaveShift)
+        End
     End
 End
