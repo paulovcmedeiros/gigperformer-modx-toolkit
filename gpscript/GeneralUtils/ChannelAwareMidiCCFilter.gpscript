@@ -1,0 +1,25 @@
+//--------------------------------------------------------------------------
+// Filter MIDI CC message with number `CCNumber` in a channel-aware manner.
+//
+// Required: Before you `Include` this file, you must declare
+// a `Const` `CCNumber` in the `Include`r script indicating
+// which MIDI CC number is to be watched for.
+//--------------------------------------------------------------------------
+Include "gigperformer-modx-toolkit/gpscript/GeneralUtils/MainAndChannelOnOffSwitches"
+
+
+//-------------------------------------------
+Initialization
+    //OpenLogWindow()
+    SetDisplayMessage("Copyright (c) 2026 Paulo V. C. Medeiros")
+    SetInfoMessage(
+        "Allow or block MIDI CC #" + IntToString(CCNumber) + " by channel"
+    )
+End
+
+
+On ControlChangeEvent (m : ControlChangeMessage) Matching CCNumber
+    If MODXTK_ChannelIsAllowed(GetChannel(m)) Then
+        SendNow(m)
+    End
+End
