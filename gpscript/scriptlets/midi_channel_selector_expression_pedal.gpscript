@@ -1,0 +1,240 @@
+Const
+    MIDI_CC_CENTER_VALUE : Integer = 64
+
+Var
+    pedalValueCH01, pedalValueCH02, pedalValueCH03, pedalValueCH04,
+    pedalValueCH05, pedalValueCH06, pedalValueCH07, pedalValueCH08,
+    pedalValueCH09, pedalValueCH10, pedalValueCH11, pedalValueCH12,
+    pedalValueCH13, pedalValueCH14, pedalValueCH15, pedalValueCH16 : Subrange Parameter 0..127 = 0
+
+    OutputSignal01CH01, OutputSignal02CH01, OutputSignal03CH01,
+    OutputSignal01CH02, OutputSignal02CH02, OutputSignal03CH02,
+    OutputSignal01CH03, OutputSignal02CH03, OutputSignal03CH03,
+    OutputSignal01CH04, OutputSignal02CH04, OutputSignal03CH04,
+    OutputSignal01CH05, OutputSignal02CH05, OutputSignal03CH05,
+    OutputSignal01CH06, OutputSignal02CH06, OutputSignal03CH06,
+    OutputSignal01CH07, OutputSignal02CH07, OutputSignal03CH07,
+    OutputSignal01CH08, OutputSignal02CH08, OutputSignal03CH08,
+    OutputSignal01CH09, OutputSignal02CH09, OutputSignal03CH09,
+    OutputSignal01CH10, OutputSignal02CH10, OutputSignal03CH10,
+    OutputSignal01CH11, OutputSignal02CH11, OutputSignal03CH11,
+    OutputSignal01CH12, OutputSignal02CH12, OutputSignal03CH12,
+    OutputSignal01CH13, OutputSignal02CH13, OutputSignal03CH13,
+    OutputSignal01CH14, OutputSignal02CH14, OutputSignal03CH14,
+    OutputSignal01CH15, OutputSignal02CH15, OutputSignal03CH15,
+    OutputSignal01CH16, OutputSignal02CH16, OutputSignal03CH16
+        : Discrete Parameter
+            "OFF", "Expression", "Modulation", "Pitch", "Cutoff", "Aftertouch", "Breath Controller"
+            = "OFF"
+
+    CCToRemapAsCenter : Subrange Parameter 1..126 = MIDI_CC_CENTER_VALUE
+
+Var
+    isExprPedalActiveAtChannel : Boolean Array = [
+        false, false, false, false, false, false, false, false,
+        false, false, false, false, false, false, false, false
+    ]
+    channelPedalValues : Subrange Array = [
+        pedalValueCH01, pedalValueCH02, pedalValueCH03, pedalValueCH04,
+        pedalValueCH05, pedalValueCH06, pedalValueCH07, pedalValueCH08,
+        pedalValueCH09, pedalValueCH10, pedalValueCH11, pedalValueCH12,
+        pedalValueCH13, pedalValueCH14, pedalValueCH15, pedalValueCH16
+    ]
+    channelSignals : Discrete Array = [
+        OutputSignal01CH01, OutputSignal02CH01, OutputSignal03CH01,
+        OutputSignal01CH02, OutputSignal02CH02, OutputSignal03CH02,
+        OutputSignal01CH03, OutputSignal02CH03, OutputSignal03CH03,
+        OutputSignal01CH04, OutputSignal02CH04, OutputSignal03CH04,
+        OutputSignal01CH05, OutputSignal02CH05, OutputSignal03CH05,
+        OutputSignal01CH06, OutputSignal02CH06, OutputSignal03CH06,
+        OutputSignal01CH07, OutputSignal02CH07, OutputSignal03CH07,
+        OutputSignal01CH08, OutputSignal02CH08, OutputSignal03CH08,
+        OutputSignal01CH09, OutputSignal02CH09, OutputSignal03CH09,
+        OutputSignal01CH10, OutputSignal02CH10, OutputSignal03CH10,
+        OutputSignal01CH11, OutputSignal02CH11, OutputSignal03CH11,
+        OutputSignal01CH12, OutputSignal02CH12, OutputSignal03CH12,
+        OutputSignal01CH13, OutputSignal02CH13, OutputSignal03CH13,
+        OutputSignal01CH14, OutputSignal02CH14, OutputSignal03CH14,
+        OutputSignal01CH15, OutputSignal02CH15, OutputSignal03CH15,
+        OutputSignal01CH16, OutputSignal02CH16, OutputSignal03CH16
+    ]
+
+Const
+    EXPR_PEDAL_CC_NUMBER : Integer = 11
+
+
+Function UpdateListOfExprActiveChannels()
+    // Cache which MIDI channels should react to incoming expression pedal values.
+    Var
+        iChZeroBased, iSignal, iSigStart, iSigEnd : Integer
+        signalName : String
+        isActive : Boolean
+
+    For iChZeroBased=0; iChZeroBased<16; iChZeroBased=iChZeroBased+1 Do
+        isActive = false
+        iSigStart = 3 * iChZeroBased
+        iSigEnd = iSigStart + 2
+        For iSignal=iSigStart; iSignal<=iSigEnd; iSignal=iSignal+1 Do
+            signalName = channelSignals[iSignal]
+            If signalName != "OFF" Then
+                isActive = true
+            End
+        End
+
+        isExprPedalActiveAtChannel[iChZeroBased] = isActive
+    End
+End
+
+
+Function ResetValuesForInactiveChannels()
+    // Clear displayed values for channels that are not using the pedal.
+    Var
+        iChZeroBased : Integer
+
+    For iChZeroBased=0; iChZeroBased<16; iChZeroBased=iChZeroBased+1 Do
+        If !isExprPedalActiveAtChannel[iChZeroBased] Then
+            channelPedalValues[iChZeroBased] = 0
+        End
+    End
+End
+
+
+Function SendSignal(signalName : String, signalValue: Integer, channel : Integer)
+    // Send the expression pedal value as the selected MIDI signal on channel.
+    Var
+        ccNumber : Integer
+        ccMessage : ControlChangeMessage
+        pbMessage : PitchBendMessage
+        atMessage : AfterTouchMessage
+
+    Select
+        signalName == "Modulation"        do ccNumber = 1
+        signalName == "Breath Controller" do ccNumber = 2
+        signalName == "Expression"        do ccNumber = 11
+        signalName == "Cutoff"            do ccNumber = 74
+        True                              do ccNumber = 0
+    End
+
+    If ccNumber > 0 Then
+        ccMessage = MakeControlChangeMessageEx(ccNumber, signalValue, channel)
+        SendNow(ccMessage)
+    Else
+        Select
+            signalName == "Pitch"  do
+                If signalValue==63 Or signalValue==64 Then
+                    signalValue = 8192 // Pitch-bend center
+                Else
+                    signalValue = ScaleInt (signalValue, 0, 127, 0, 16383)
+                End
+                pbMessage = MakePitchBendMessageEx(signalValue, channel)
+                SendNow(pbMessage)
+            signalName == "Aftertouch" do
+                atMessage = MakeAfterTouchMessageEx(signalValue, channel)
+                SendNow(atMessage)
+        End
+    End
+End
+
+
+Function RemapPedalCenterValue(x : Integer) Returns Integer
+    // Remap the configured pedal CC value to the MIDI center value.
+    // Below and above that point are scaled independently.
+    Var
+        a, b : Double
+
+    If x <= CCToRemapAsCenter Then
+        a = IntToFloat(MIDI_CC_CENTER_VALUE) / IntToFloat(CCToRemapAsCenter)
+        b = 0.0
+    Else
+        a = (127 - IntToFloat(MIDI_CC_CENTER_VALUE)) / (127 - IntToFloat(CCToRemapAsCenter))
+        b = 127 * (1 - a)
+    End
+
+    result = Round(a*x + b)
+End
+
+
+//--------------------------------------------------
+Initialization
+    //OpenLogWindow()
+    SetDisplayMessage("Copyright (c) 2026 Paulo V. C. Medeiros")
+    SetInfoMessage(<<<
+    Remap inputs from one expression pedal to up to 3 selected MIDI signals per channel.
+    Supports Expression, Modulation, Pitch Bend, Cutoff, Aftertouch, and Breath Controller.
+    >>>)
+    UpdateListOfExprActiveChannels()
+    ResetValuesForInactiveChannels()
+End
+
+
+On Activate
+    UpdateListOfExprActiveChannels()
+    ResetValuesForInactiveChannels()
+End
+
+
+On ParameterValueChanged(param_value : Discrete, index : Integer)
+    Matching
+        OutputSignal01CH01, OutputSignal02CH01, OutputSignal03CH01,
+        OutputSignal01CH02, OutputSignal02CH02, OutputSignal03CH02,
+        OutputSignal01CH03, OutputSignal02CH03, OutputSignal03CH03,
+        OutputSignal01CH04, OutputSignal02CH04, OutputSignal03CH04,
+        OutputSignal01CH05, OutputSignal02CH05, OutputSignal03CH05,
+        OutputSignal01CH06, OutputSignal02CH06, OutputSignal03CH06,
+        OutputSignal01CH07, OutputSignal02CH07, OutputSignal03CH07,
+        OutputSignal01CH08, OutputSignal02CH08, OutputSignal03CH08,
+        OutputSignal01CH09, OutputSignal02CH09, OutputSignal03CH09,
+        OutputSignal01CH10, OutputSignal02CH10, OutputSignal03CH10,
+        OutputSignal01CH11, OutputSignal02CH11, OutputSignal03CH11,
+        OutputSignal01CH12, OutputSignal02CH12, OutputSignal03CH12,
+        OutputSignal01CH13, OutputSignal02CH13, OutputSignal03CH13,
+        OutputSignal01CH14, OutputSignal02CH14, OutputSignal03CH14,
+        OutputSignal01CH15, OutputSignal02CH15, OutputSignal03CH15,
+        OutputSignal01CH16, OutputSignal02CH16, OutputSignal03CH16
+
+    UpdateListOfExprActiveChannels()
+    ResetValuesForInactiveChannels()
+End
+
+
+On ControlChangeEvent(m : ControlChangeMessage) Matching EXPR_PEDAL_CC_NUMBER
+    Var
+        iCh : Integer
+        ccValue : Integer = GetCCValue(m)
+        remappedCC : Integer = RemapPedalCenterValue(ccValue)
+
+    // Drive every active channel parameter from the same physical pedal value.
+    For iCh=0; iCh<16; iCh=iCh+1 Do
+        If isExprPedalActiveAtChannel[iCh] Then
+            channelPedalValues[iCh] = remappedCC
+        End
+    End
+End
+
+
+On ParameterValueChanged(param_value : Subrange, index : Integer)
+    Matching
+        pedalValueCH01, pedalValueCH02, pedalValueCH03, pedalValueCH04,
+        pedalValueCH05, pedalValueCH06, pedalValueCH07, pedalValueCH08,
+        pedalValueCH09, pedalValueCH10, pedalValueCH11, pedalValueCH12,
+        pedalValueCH13, pedalValueCH14, pedalValueCH15, pedalValueCH16
+
+    Var
+        iSignal : Integer
+        signalName: String
+        channel : Integer = index + 1
+        signalValue : Integer = param_value
+        signalStartIndex : Integer = 3 * index
+        signalEndIndex   : Integer = signalStartIndex + 2
+
+
+    If isExprPedalActiveAtChannel[index] Then
+        // Each channel can emit up to three signal types from the same value.
+        For iSignal=signalStartIndex; iSignal<=signalEndIndex; iSignal=iSignal+1 Do
+            signalName = channelSignals[iSignal]
+            If signalName != "OFF" Then
+                SendSignal(signalName, signalValue, channel)
+            End
+        End
+    End
+End
