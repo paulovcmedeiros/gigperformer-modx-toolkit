@@ -21,15 +21,6 @@ var
     AS_CH10, AS_CH11, AS_CH12, AS_CH13, AS_CH14, AS_CH15, AS_CH16: AutoSustainer
 
 
-Initialization
-    //OpenLogWindow()
-    SetDisplayMessage("Copyright (c) 2026 Paulo V. C. Medeiros")
-    SetInfoMessage(<<<
-        Route sustain by channel with optional auto-sustain.
-    >>>)
-End
-
-
 Function PlayWithAutoSustainer(m : NoteMessage)
     var
         channel : Integer = GetChannel(m)
@@ -82,6 +73,15 @@ Function KillAllNotes(channel : Integer)
     KillAutoSustainer(channel)
     SendNow(MakeControlChangeMessageEx(64, 0, channel))  // Sustain Pedal Off
     SendNow(MakeControlChangeMessageEx(123, 0, channel))  // All Notes Off
+End
+
+//---------------------------------------------------------
+Initialization
+    //OpenLogWindow()
+    SetDisplayMessage("Copyright (c) 2026 Paulo V. C. Medeiros")
+    SetInfoMessage(<<<
+        Route sustain by channel with optional auto-sustain.
+    >>>)
 End
 
 
@@ -137,7 +137,6 @@ On ControlChangeEvent (m : ControlChangeMessage) Matching 64
             SendNow(m)
         End
     End
-
 End
 
 

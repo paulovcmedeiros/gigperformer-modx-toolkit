@@ -1,16 +1,5 @@
+Include "gigperformer-modx-toolkit/gpscript/GeneralUtils/MainAndChannelOnOffSwitches"
 Include "gigperformer-modx-toolkit/gpscript/GeneralUtils/Midi"
-
-
-Var
-    MainSwitch: Discrete Parameter "OFF", "ON" = "ON"
-    CH1, CH2, CH3, CH4, CH5, CH6, CH7, CH8,
-    CH9, CH10, CH11, CH12, CH13, CH14, CH15, CH16 : Discrete Parameter "OFF", "ON" = "OFF"
-
-Var
-    channelSwitches : Discrete Array = [
-        CH1, CH2, CH3, CH4, CH5, CH6, CH7, CH8,
-        CH9, CH10, CH11, CH12, CH13, CH14, CH15, CH16
-    ]
 
 //------------------------------------
 
@@ -18,18 +7,13 @@ Initialization
     //OpenLogWindow()
     SetDisplayMessage("Copyright (c) 2026 Paulo V. C. Medeiros")
     SetInfoMessage(<<<
-        Allow or mute MIDI by channel.
+        Allow or block MIDI by channel.
     >>>)
 End
 
 
 On MidiEvent(m : MidiMessage)
-    Var
-        channel : Integer = GetChannel(m)
-        index : Integer = channel - 1
-        channel_is_allowed : Boolean = channelSwitches[index] == "ON"
-
-    If ((MainSwitch == "ON") And channel_is_allowed) Or MODXTK_IsReleaseMidiMessage(m) Then
+    If MODXTK_ChannelIsAllowed(GetChannel(m)) Or MODXTK_IsReleaseMidiMessage(m) Then
         SendNow(m)
     End
 End
