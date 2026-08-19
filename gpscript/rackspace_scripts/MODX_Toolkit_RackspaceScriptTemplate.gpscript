@@ -9,11 +9,11 @@
 // The comments below call out the places users are expected to customize.
 
 Var
-    // My MIDI In block is named MODXInSysEx because I separate regular MIDI
+    // My MIDI In block is named MODXIn because I separate regular MIDI
     // from SysEx input. Use the name of the MIDI In block that receives MODX
-    // SysEx in your own rackspace, or name your block MODXInSysEx to match this
+    // SysEx in your own rackspace, or name your block MODXIn to match this
     // template.
-    MODXInSysEx : MidiInBlock
+    MODXIn : MidiInBlock
 
 Var
     // These widgets display MODX Performance Part names. This template uses 8,
@@ -54,7 +54,7 @@ Initialization
 End
 
 
-On SysexEvent(sx : SysexMessage) From MODXInSysEx
+On SysexEvent(sx : SysexMessage) From MODXIn
     Var
         sysExConsumed, sysExConsumedInThisCall : Boolean = false
 
@@ -74,6 +74,6 @@ On SysexEvent(sx : SysexMessage) From MODXInSysEx
     // for eventual processing elsewhere. MODX bulk dumps are write-capable if
     // echoed back to the synth, so do not forward them by default.
     If Not sysExConsumed And Not MODXTK_IsMODXBulkDump(sx) Then
-        SendSysexInternalNow(MODXInSysEx, sx)
+        SendSysexInternalNow(MODXIn, sx)
     End
 End
