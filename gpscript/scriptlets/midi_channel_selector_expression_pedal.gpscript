@@ -26,6 +26,7 @@ Var
     CCToRemapAsCenter : Subrange Parameter 1..126 = MIDI_CC_CENTER_VALUE
 
 Var
+    currentPedalCCValue : Integer = 0
     currentPedalValue : Integer = 0
     hasReceivedPedalValue : Boolean = false
 
@@ -77,6 +78,19 @@ Function ResetValuesForInactiveChannels()
     For iChZeroBased=0; iChZeroBased<16; iChZeroBased=iChZeroBased+1 Do
         If !isExprPedalActiveAtChannel[iChZeroBased] Then
             channelPedalValues[iChZeroBased] = 0
+        End
+    End
+End
+
+
+Function UpdatePedalValuesForActiveChannels(pedalValue : Integer)
+    // Update every active channel from the same physical pedal value.
+    Var
+        iChZeroBased : Integer
+
+    For iChZeroBased=0; iChZeroBased<16; iChZeroBased=iChZeroBased+1 Do
+        If isExprPedalActiveAtChannel[iChZeroBased] Then
+            channelPedalValues[iChZeroBased] = pedalValue
         End
     End
 End
@@ -207,6 +221,7 @@ Initialization
     Remap inputs from one expression pedal to the selected MIDI signals per channel.
     Supports Expression, Modulation, Pitch Bend, Cutoff, Aftertouch, and Breath Controller.
     Selected signals are reset on rackspace activation and when removed from a channel.
+    Changing the pedal center remaps and resends the latest known physical pedal value.
     Conventional reset values are used: Expression=127, Cutoff=64, Pitch Bend=center, and others=0.
     Signal bit values:
         * Expression        =  1
@@ -237,6 +252,17 @@ On Activate
 End
 
 
+On ParameterValueChanged Matching CCToRemapAsCenter
+    // Remap the raw pedal value with the new center and resend it to active channels.
+    If hasReceivedPedalValue Then
+        currentPedalValue = RemapPedalCenterValue(currentPedalCCValue)
+        UpdatePedalValuesForActiveChannels(currentPedalValue)
+    Else
+        ResetSelectedSignalsForAllChannels()
+    End
+End
+
+
 On ParameterValueChanged(param_value : Subrange, index : Integer)
     Matching
         OutputSignalCH01, OutputSignalCH02, OutputSignalCH03, OutputSignalCH04,
@@ -263,19 +289,14 @@ End
 
 On ControlChangeEvent(m : ControlChangeMessage) Matching EXPR_PEDAL_CC_NUMBER
     Var
-        iCh : Integer
         ccValue : Integer = GetCCValue(m)
         remappedCC : Integer = RemapPedalCenterValue(ccValue)
 
+    currentPedalCCValue = ccValue
     currentPedalValue = remappedCC
     hasReceivedPedalValue = true
 
-    // Drive every active channel parameter from the same physical pedal value.
-    For iCh=0; iCh<16; iCh=iCh+1 Do
-        If isExprPedalActiveAtChannel[iCh] Then
-            channelPedalValues[iCh] = remappedCC
-        End
-    End
+    UpdatePedalValuesForActiveChannels(remappedCC)
 End
 
 
