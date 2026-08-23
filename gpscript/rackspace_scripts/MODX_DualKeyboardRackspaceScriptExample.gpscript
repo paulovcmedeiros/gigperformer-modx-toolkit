@@ -1,0 +1,180 @@
+// This file provides a concrete example integration between this toolkit
+// and a Gig Performer rackspace script. It is based on a setup with two
+// keyboards and eight MODX Performance Parts.
+//
+// It receives MODX Performance and Part names, combines the upper and lower
+// keyboard selection state for each Part, and changes each Part label colour
+// to show whether either keyboard is using it.
+//
+// The selector widgets only reflect and combine state here. Connect the upper
+// and lower keyboard widgets to the corresponding MIDI-routing scriptlets in
+// your rackspace to perform the actual routing.
+//
+// Use MODX_Toolkit_RackspaceScriptTemplate.gpscript instead if you only need
+// Performance and Part name synchronization. In an existing setup, merge the
+// relevant parts of this example into your own rackspace script, since each
+// rackspace has only one rackspace script and callbacks cannot be isolated per
+// component.
+//
+// The comments below call out the widget names, Part count, colours, and MIDI
+// block name that users are expected to customize.
+
+Var
+    // This example uses a MIDI In block named MODXIn. Use the name of the MIDI
+    // In block that receives MODX SysEx in your own rackspace, or name your
+    // block MODXIn to match this example.
+    MODXIn : MidiInBlock
+
+Var
+    // These widgets display MODX Performance Part names. This example uses 8,
+    // but you can declare up to 16 and name them however you like. Declare them
+    // before MODXTK_performancePartNameWidgets.
+    PartLabel01, PartLabel02, PartLabel03, PartLabel04,
+    PartLabel05, PartLabel06, PartLabel07, PartLabel08 : Widget
+    PartLabels : Widget Array = [
+        PartLabel01, PartLabel02, PartLabel03, PartLabel04,
+        PartLabel05, PartLabel06, PartLabel07, PartLabel08
+    ]
+
+    // Widgets that decide whether the upper keyboard will send MIDI Note
+    // events to the corresponding Parts
+    UpperKbdSwitchCH01, UpperKbdSwitchCH02, UpperKbdSwitchCH03, UpperKbdSwitchCH04,
+    UpperKbdSwitchCH05, UpperKbdSwitchCH06, UpperKbdSwitchCH07, UpperKbdSwitchCH08 : Widget
+
+    // Like UpperKbdSwitchCH**, but for the lower keyboard
+    LowerKbdSwitchCH01, LowerKbdSwitchCH02, LowerKbdSwitchCH03, LowerKbdSwitchCH04,
+    LowerKbdSwitchCH05, LowerKbdSwitchCH06, LowerKbdSwitchCH07, LowerKbdSwitchCH08 : Widget
+
+    // Hidden widgets that combine UpperKbdSwitchCH** and LowerKbdSwitchCH**:
+    //    AnyKbdSwitchCHXX = UpperKbdSwitchCHXX OR LowerKbdSwitchCHXX
+    AnyKbdSwitchCH01, AnyKbdSwitchCH02, AnyKbdSwitchCH03, AnyKbdSwitchCH04 : Widget
+    AnyKbdSwitchCH05, AnyKbdSwitchCH06, AnyKbdSwitchCH07, AnyKbdSwitchCH08 : Widget
+
+    // Aggregate Widget arrays for [Upper/Lower/Any]KbdSwitchCH**
+    UpperKbdSwitches : Widget Array = [
+        UpperKbdSwitchCH01, UpperKbdSwitchCH02, UpperKbdSwitchCH03, UpperKbdSwitchCH04,
+        UpperKbdSwitchCH05, UpperKbdSwitchCH06, UpperKbdSwitchCH07, UpperKbdSwitchCH08
+    ]
+    LowerKbdSwitches : Widget Array = [
+        LowerKbdSwitchCH01, LowerKbdSwitchCH02, LowerKbdSwitchCH03, LowerKbdSwitchCH04,
+        LowerKbdSwitchCH05, LowerKbdSwitchCH06, LowerKbdSwitchCH07, LowerKbdSwitchCH08
+    ]
+    AnyKbdSwitches : Widget Array = [
+        AnyKbdSwitchCH01, AnyKbdSwitchCH02, AnyKbdSwitchCH03, AnyKbdSwitchCH04,
+        AnyKbdSwitchCH05, AnyKbdSwitchCH06, AnyKbdSwitchCH07, AnyKbdSwitchCH08
+    ]
+
+    // PerformancePartNameSysexReceiver uses this array to map MODX Part indexes
+    // to label widgets. Include only the widgets for the parts you want displayed,
+    // in ascending MODX Part order. Declare it before including
+    // PerformancePartNameSysexReceiver.
+    MODXTK_performancePartNameWidgets : Widget Array = [
+        PartLabel01, PartLabel02, PartLabel03, PartLabel04,
+        PartLabel05, PartLabel06, PartLabel07, PartLabel08
+    ]
+
+    // PerformanceNameSysexReceiver uses this widget to display the current MODX
+    // Performance name. Declare it before including PerformanceNameSysexReceiver.
+    PerformanceNameWidget : Widget
+
+
+// These files must be included in this specific order
+Include "gigperformer-modx-toolkit/gpscript/GeneralUtils/Byte2String"
+Include "gigperformer-modx-toolkit/gpscript/GeneralUtils/SysEx"
+Include "gigperformer-modx-toolkit/gpscript/MODX/SysEx"
+Include "gigperformer-modx-toolkit/gpscript/MODX/PerformanceNameSysexReceiver"
+Include "gigperformer-modx-toolkit/gpscript/MODX/PerformancePartNameSysexReceiver"
+
+Initialization
+    //OpenLogWindow()
+End
+
+
+On SysexEvent(sx : SysexMessage) From MODXIn
+    Var
+        sysExConsumed, sysExConsumedInThisCall : Boolean = false
+
+    sysExConsumedInThisCall = MODXTK_SetPerformanceNameWidgetValueIfApplicable(sx)
+    sysExConsumed = sysExConsumed Or sysExConsumedInThisCall
+
+    sysExConsumedInThisCall = MODXTK_SetPerformancePartNameWidgetValueIfApplicable(sx)
+    sysExConsumed = sysExConsumed Or sysExConsumedInThisCall
+
+    // Place your code from after this comment block.
+    // I recommend using functions that return booleans indicating whether the
+    // SysEx message has been used, and then set sysExConsumed as we did above
+    // with the function in this example. By doing this, you prevent unused
+    // SysEx messages from being swallowed.
+
+    // Finally, we make sure knowingly unused non-bulk SysEx is sent forward
+    // for eventual processing elsewhere. MODX bulk dumps are write-capable if
+    // echoed back to the synth, so do not forward them by default.
+    If Not sysExConsumed And Not MODXTK_IsMODXBulkDump(sx) Then
+        SendSysexInternalNow(MODXIn, sx)
+    End
+End
+
+
+// Updates a Part label colour according to its combined keyboard selection state
+Function UpdatePartLabel(zeroBasedIndex : Integer)
+    Var
+        isOn : Double = Max(
+            GetWidgetValue(UpperKbdSwitches[zeroBasedIndex]),
+            GetWidgetValue(LowerKbdSwitches[zeroBasedIndex])
+        )
+
+    If isOn > 0.0 Then
+        // ON: #00B8FFFF
+        SetLabelColor(
+            PartLabels[zeroBasedIndex],
+            RGBToColor(0.0, 0.7215686275, 1.0, 1.0)
+        )
+    Else
+        // OFF: #666666FF
+        SetLabelColor(
+            PartLabels[zeroBasedIndex],
+            RGBToColor(0.4, 0.4, 0.4, 1.0)
+        )
+    End
+End
+
+
+// Combines the upper and lower keyboard selection state for one Part
+Function UpdateAnyKbdSwitch(zeroBasedIndex : Integer)
+    SetWidgetValue(
+        AnyKbdSwitches[zeroBasedIndex],
+        Max(
+            GetWidgetValue(UpperKbdSwitches[zeroBasedIndex]),
+            GetWidgetValue(LowerKbdSwitches[zeroBasedIndex])
+        )
+    )
+End
+
+
+Initialization
+    Var
+        index : Integer
+
+    For index = 0; index < Size(PartLabels); index = index + 1 Do
+        UpdatePartLabel(index)
+        UpdateAnyKbdSwitch(index)
+    End
+End
+
+
+On WidgetValueChanged(w : Widget, index : Integer, newValue : Double)
+    From UpperKbdSwitchCH01, UpperKbdSwitchCH02, UpperKbdSwitchCH03, UpperKbdSwitchCH04,
+         UpperKbdSwitchCH05, UpperKbdSwitchCH06, UpperKbdSwitchCH07, UpperKbdSwitchCH08
+
+    UpdatePartLabel(index)
+    UpdateAnyKbdSwitch(index)
+End
+
+
+On WidgetValueChanged(w : Widget, index : Integer, newValue : Double)
+    From LowerKbdSwitchCH01, LowerKbdSwitchCH02, LowerKbdSwitchCH03, LowerKbdSwitchCH04,
+         LowerKbdSwitchCH05, LowerKbdSwitchCH06, LowerKbdSwitchCH07, LowerKbdSwitchCH08
+
+    UpdatePartLabel(index)
+    UpdateAnyKbdSwitch(index)
+End

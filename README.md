@@ -81,9 +81,12 @@ is not intended to be loaded directly.
 - `gig_scripts/song_change_toggle_osc_trigger.gpscript`: toggle an OSC value whenever the
   current song changes. It sends to the local `/SongChangeTrigger/SetValue` OSC address,
   which requires a corresponding OSC-addressable target.
-- `rackspace_scripts/MODX_Toolkit_RackspaceScriptTemplate.gpscript`: example rackspace
-  script that receives MODX SysEx and updates Performance and Part labels. Read its
+- `rackspace_scripts/MODX_Toolkit_RackspaceScriptTemplate.gpscript`: minimal rackspace
+  template that receives MODX SysEx and updates Performance and Part labels. Read its
   comments for the widget and MIDI block names you may need to adapt.
+- `rackspace_scripts/MODX_DualKeyboardRackspaceScriptExample.gpscript`: expanded
+  rackspace example for two keyboards and eight MODX Parts. It combines both keyboards'
+  Part-selection state and uses it to highlight active Part labels.
 
 ### Include Files
 
