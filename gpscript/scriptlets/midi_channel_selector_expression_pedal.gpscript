@@ -1,4 +1,6 @@
 Const
+    // The MIDI center value is always 64.
+    // We use a constant to avoid repeating this as a "magic number".
     MIDI_CC_CENTER_VALUE : Integer = 64
 
     // Add these bit values to select multiple output signals for a channel.
@@ -114,6 +116,36 @@ Function SendSignal(signalFlag : Integer, signalValue: Integer, channel : Intege
 End
 
 
+Function GetSignalResetValue(signalFlag : Integer) Returns Integer
+    // Return the neutral MIDI value for a signal that is no longer selected.
+    Select
+        signalFlag == SIGNAL_EXPRESSION do result = 127
+        signalFlag == SIGNAL_CUTOFF     do result = MIDI_CC_CENTER_VALUE
+        signalFlag == SIGNAL_PITCH      do result = MIDI_CC_CENTER_VALUE
+        True                            do result = 0
+    End
+End
+
+
+Function ResetRemovedSignals(previousSignalMask : Integer, signalMask : Integer, channel : Integer)
+    // Reset only signals that were selected in the previous channel mask.
+    Var
+        iSignal : Integer
+        signalFlag : Integer
+        wasSelected, isSelected : Boolean
+
+    For iSignal=0; iSignal<Size(availableSignalFlags); iSignal=iSignal+1 Do
+        signalFlag = availableSignalFlags[iSignal]
+        wasSelected = (previousSignalMask And signalFlag) != 0
+        isSelected = (signalMask And signalFlag) != 0
+
+        If wasSelected And !isSelected Then
+            SendSignal(signalFlag, GetSignalResetValue(signalFlag), channel)
+        End
+    End
+End
+
+
 Function RemapPedalCenterValue(x : Integer) Returns Integer
     // Remap the configured pedal CC value to the MIDI center value.
     // Below and above that point are scaled independently.
@@ -139,6 +171,7 @@ Initialization
     SetInfoMessage(<<<
     Remap inputs from one expression pedal to the selected MIDI signals per channel.
     Supports Expression, Modulation, Pitch Bend, Cutoff, Aftertouch, and Breath Controller.
+    Signals removed from a channel are reset to their neutral MIDI values.
     Signal bit values:
         * Expression        =  1
         * Modulation        =  2
@@ -172,6 +205,12 @@ On ParameterValueChanged(param_value : Subrange, index : Integer)
         OutputSignalCH09, OutputSignalCH10, OutputSignalCH11, OutputSignalCH12,
         OutputSignalCH13, OutputSignalCH14, OutputSignalCH15, OutputSignalCH16
 
+    Var
+        previousSignalMask : Integer = GetSubrangePreviousValue(param_value)
+        signalMask : Integer = param_value
+        channel : Integer = index + 1
+
+    ResetRemovedSignals(previousSignalMask, signalMask, channel)
     UpdateListOfExprActiveChannels()
     ResetValuesForInactiveChannels()
 End
