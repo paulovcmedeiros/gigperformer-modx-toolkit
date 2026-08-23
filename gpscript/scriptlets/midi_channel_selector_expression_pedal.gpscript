@@ -1,31 +1,25 @@
 Const
     MIDI_CC_CENTER_VALUE : Integer = 64
 
+    // Add these bit values to select multiple output signals for a channel.
+    SIGNAL_EXPRESSION : Integer = 1
+    SIGNAL_MODULATION : Integer = 2
+    SIGNAL_AFTERTOUCH : Integer = 4
+    SIGNAL_CUTOFF : Integer = 8
+    SIGNAL_PITCH : Integer = 16
+    SIGNAL_BREATH_CONTROLLER : Integer = 32
+
 Var
     pedalValueCH01, pedalValueCH02, pedalValueCH03, pedalValueCH04,
     pedalValueCH05, pedalValueCH06, pedalValueCH07, pedalValueCH08,
     pedalValueCH09, pedalValueCH10, pedalValueCH11, pedalValueCH12,
     pedalValueCH13, pedalValueCH14, pedalValueCH15, pedalValueCH16 : Subrange Parameter 0..127 = 0
 
-    OutputSignal01CH01, OutputSignal02CH01, OutputSignal03CH01,
-    OutputSignal01CH02, OutputSignal02CH02, OutputSignal03CH02,
-    OutputSignal01CH03, OutputSignal02CH03, OutputSignal03CH03,
-    OutputSignal01CH04, OutputSignal02CH04, OutputSignal03CH04,
-    OutputSignal01CH05, OutputSignal02CH05, OutputSignal03CH05,
-    OutputSignal01CH06, OutputSignal02CH06, OutputSignal03CH06,
-    OutputSignal01CH07, OutputSignal02CH07, OutputSignal03CH07,
-    OutputSignal01CH08, OutputSignal02CH08, OutputSignal03CH08,
-    OutputSignal01CH09, OutputSignal02CH09, OutputSignal03CH09,
-    OutputSignal01CH10, OutputSignal02CH10, OutputSignal03CH10,
-    OutputSignal01CH11, OutputSignal02CH11, OutputSignal03CH11,
-    OutputSignal01CH12, OutputSignal02CH12, OutputSignal03CH12,
-    OutputSignal01CH13, OutputSignal02CH13, OutputSignal03CH13,
-    OutputSignal01CH14, OutputSignal02CH14, OutputSignal03CH14,
-    OutputSignal01CH15, OutputSignal02CH15, OutputSignal03CH15,
-    OutputSignal01CH16, OutputSignal02CH16, OutputSignal03CH16
-        : Discrete Parameter
-            "OFF", "Expression", "Modulation", "Pitch", "Cutoff", "Aftertouch", "Breath Controller"
-            = "OFF"
+    OutputSignalCH01, OutputSignalCH02, OutputSignalCH03, OutputSignalCH04,
+    OutputSignalCH05, OutputSignalCH06, OutputSignalCH07, OutputSignalCH08,
+    OutputSignalCH09, OutputSignalCH10, OutputSignalCH11, OutputSignalCH12,
+    OutputSignalCH13, OutputSignalCH14, OutputSignalCH15, OutputSignalCH16
+        : Subrange Parameter 0..63 = 0
 
     CCToRemapAsCenter : Subrange Parameter 1..126 = MIDI_CC_CENTER_VALUE
 
@@ -40,23 +34,19 @@ Var
         pedalValueCH09, pedalValueCH10, pedalValueCH11, pedalValueCH12,
         pedalValueCH13, pedalValueCH14, pedalValueCH15, pedalValueCH16
     ]
-    channelSignals : Discrete Array = [
-        OutputSignal01CH01, OutputSignal02CH01, OutputSignal03CH01,
-        OutputSignal01CH02, OutputSignal02CH02, OutputSignal03CH02,
-        OutputSignal01CH03, OutputSignal02CH03, OutputSignal03CH03,
-        OutputSignal01CH04, OutputSignal02CH04, OutputSignal03CH04,
-        OutputSignal01CH05, OutputSignal02CH05, OutputSignal03CH05,
-        OutputSignal01CH06, OutputSignal02CH06, OutputSignal03CH06,
-        OutputSignal01CH07, OutputSignal02CH07, OutputSignal03CH07,
-        OutputSignal01CH08, OutputSignal02CH08, OutputSignal03CH08,
-        OutputSignal01CH09, OutputSignal02CH09, OutputSignal03CH09,
-        OutputSignal01CH10, OutputSignal02CH10, OutputSignal03CH10,
-        OutputSignal01CH11, OutputSignal02CH11, OutputSignal03CH11,
-        OutputSignal01CH12, OutputSignal02CH12, OutputSignal03CH12,
-        OutputSignal01CH13, OutputSignal02CH13, OutputSignal03CH13,
-        OutputSignal01CH14, OutputSignal02CH14, OutputSignal03CH14,
-        OutputSignal01CH15, OutputSignal02CH15, OutputSignal03CH15,
-        OutputSignal01CH16, OutputSignal02CH16, OutputSignal03CH16
+    channelSignals : Subrange Array = [
+        OutputSignalCH01, OutputSignalCH02, OutputSignalCH03, OutputSignalCH04,
+        OutputSignalCH05, OutputSignalCH06, OutputSignalCH07, OutputSignalCH08,
+        OutputSignalCH09, OutputSignalCH10, OutputSignalCH11, OutputSignalCH12,
+        OutputSignalCH13, OutputSignalCH14, OutputSignalCH15, OutputSignalCH16
+    ]
+    availableSignalFlags : Integer Array = [
+        SIGNAL_EXPRESSION,
+        SIGNAL_MODULATION,
+        SIGNAL_AFTERTOUCH,
+        SIGNAL_CUTOFF,
+        SIGNAL_PITCH,
+        SIGNAL_BREATH_CONTROLLER
     ]
 
 Const
@@ -66,22 +56,10 @@ Const
 Function UpdateListOfExprActiveChannels()
     // Cache which MIDI channels should react to incoming expression pedal values.
     Var
-        iChZeroBased, iSignal, iSigStart, iSigEnd : Integer
-        signalName : String
-        isActive : Boolean
+        iChZeroBased : Integer
 
     For iChZeroBased=0; iChZeroBased<16; iChZeroBased=iChZeroBased+1 Do
-        isActive = false
-        iSigStart = 3 * iChZeroBased
-        iSigEnd = iSigStart + 2
-        For iSignal=iSigStart; iSignal<=iSigEnd; iSignal=iSignal+1 Do
-            signalName = channelSignals[iSignal]
-            If signalName != "OFF" Then
-                isActive = true
-            End
-        End
-
-        isExprPedalActiveAtChannel[iChZeroBased] = isActive
+        isExprPedalActiveAtChannel[iChZeroBased] = channelSignals[iChZeroBased] != 0
     End
 End
 
@@ -99,7 +77,7 @@ Function ResetValuesForInactiveChannels()
 End
 
 
-Function SendSignal(signalName : String, signalValue: Integer, channel : Integer)
+Function SendSignal(signalFlag : Integer, signalValue: Integer, channel : Integer)
     // Send the expression pedal value as the selected MIDI signal on channel.
     Var
         ccNumber : Integer
@@ -108,11 +86,11 @@ Function SendSignal(signalName : String, signalValue: Integer, channel : Integer
         atMessage : AfterTouchMessage
 
     Select
-        signalName == "Modulation"        do ccNumber = 1
-        signalName == "Breath Controller" do ccNumber = 2
-        signalName == "Expression"        do ccNumber = 11
-        signalName == "Cutoff"            do ccNumber = 74
-        True                              do ccNumber = 0
+        signalFlag == SIGNAL_MODULATION        do ccNumber = 1
+        signalFlag == SIGNAL_BREATH_CONTROLLER do ccNumber = 2
+        signalFlag == SIGNAL_EXPRESSION        do ccNumber = 11
+        signalFlag == SIGNAL_CUTOFF            do ccNumber = 74
+        True                                   do ccNumber = 0
     End
 
     If ccNumber > 0 Then
@@ -120,7 +98,7 @@ Function SendSignal(signalName : String, signalValue: Integer, channel : Integer
         SendNow(ccMessage)
     Else
         Select
-            signalName == "Pitch"  do
+            signalFlag == SIGNAL_PITCH do
                 If signalValue==63 Or signalValue==64 Then
                     signalValue = 8192 // Pitch-bend center
                 Else
@@ -128,7 +106,7 @@ Function SendSignal(signalName : String, signalValue: Integer, channel : Integer
                 End
                 pbMessage = MakePitchBendMessageEx(signalValue, channel)
                 SendNow(pbMessage)
-            signalName == "Aftertouch" do
+            signalFlag == SIGNAL_AFTERTOUCH do
                 atMessage = MakeAfterTouchMessageEx(signalValue, channel)
                 SendNow(atMessage)
         End
@@ -159,8 +137,22 @@ Initialization
     //OpenLogWindow()
     SetDisplayMessage("Copyright (c) 2026 Paulo V. C. Medeiros")
     SetInfoMessage(<<<
-    Remap inputs from one expression pedal to up to 3 selected MIDI signals per channel.
+    Remap inputs from one expression pedal to the selected MIDI signals per channel.
     Supports Expression, Modulation, Pitch Bend, Cutoff, Aftertouch, and Breath Controller.
+    Signal bit values:
+        * Expression        =  1
+        * Modulation        =  2
+        * Aftertouch        =  4
+        * Cutoff            =  8
+        * Pitch             = 16
+        * Breath Controller = 32
+    Examples:
+      0 = OFF
+      5 = Expression + Aftertouch
+      7 = Expression + Modulation + Aftertouch
+      10 = Modulation + Cutoff
+      19 = Expression + Modulation + Pitch
+      63 = All available signals
     >>>)
     UpdateListOfExprActiveChannels()
     ResetValuesForInactiveChannels()
@@ -173,24 +165,12 @@ On Activate
 End
 
 
-On ParameterValueChanged(param_value : Discrete, index : Integer)
+On ParameterValueChanged(param_value : Subrange, index : Integer)
     Matching
-        OutputSignal01CH01, OutputSignal02CH01, OutputSignal03CH01,
-        OutputSignal01CH02, OutputSignal02CH02, OutputSignal03CH02,
-        OutputSignal01CH03, OutputSignal02CH03, OutputSignal03CH03,
-        OutputSignal01CH04, OutputSignal02CH04, OutputSignal03CH04,
-        OutputSignal01CH05, OutputSignal02CH05, OutputSignal03CH05,
-        OutputSignal01CH06, OutputSignal02CH06, OutputSignal03CH06,
-        OutputSignal01CH07, OutputSignal02CH07, OutputSignal03CH07,
-        OutputSignal01CH08, OutputSignal02CH08, OutputSignal03CH08,
-        OutputSignal01CH09, OutputSignal02CH09, OutputSignal03CH09,
-        OutputSignal01CH10, OutputSignal02CH10, OutputSignal03CH10,
-        OutputSignal01CH11, OutputSignal02CH11, OutputSignal03CH11,
-        OutputSignal01CH12, OutputSignal02CH12, OutputSignal03CH12,
-        OutputSignal01CH13, OutputSignal02CH13, OutputSignal03CH13,
-        OutputSignal01CH14, OutputSignal02CH14, OutputSignal03CH14,
-        OutputSignal01CH15, OutputSignal02CH15, OutputSignal03CH15,
-        OutputSignal01CH16, OutputSignal02CH16, OutputSignal03CH16
+        OutputSignalCH01, OutputSignalCH02, OutputSignalCH03, OutputSignalCH04,
+        OutputSignalCH05, OutputSignalCH06, OutputSignalCH07, OutputSignalCH08,
+        OutputSignalCH09, OutputSignalCH10, OutputSignalCH11, OutputSignalCH12,
+        OutputSignalCH13, OutputSignalCH14, OutputSignalCH15, OutputSignalCH16
 
     UpdateListOfExprActiveChannels()
     ResetValuesForInactiveChannels()
@@ -221,19 +201,17 @@ On ParameterValueChanged(param_value : Subrange, index : Integer)
 
     Var
         iSignal : Integer
-        signalName: String
+        signalFlag : Integer
         channel : Integer = index + 1
         signalValue : Integer = param_value
-        signalStartIndex : Integer = 3 * index
-        signalEndIndex   : Integer = signalStartIndex + 2
 
 
     If isExprPedalActiveAtChannel[index] Then
-        // Each channel can emit up to three signal types from the same value.
-        For iSignal=signalStartIndex; iSignal<=signalEndIndex; iSignal=iSignal+1 Do
-            signalName = channelSignals[iSignal]
-            If signalName != "OFF" Then
-                SendSignal(signalName, signalValue, channel)
+        // Each channel can emit all selected signal types from the same value.
+        For iSignal=0; iSignal<Size(availableSignalFlags); iSignal=iSignal+1 Do
+            signalFlag = availableSignalFlags[iSignal]
+            If (channelSignals[index] And signalFlag) != 0 Then
+                SendSignal(signalFlag, signalValue, channel)
             End
         End
     End
