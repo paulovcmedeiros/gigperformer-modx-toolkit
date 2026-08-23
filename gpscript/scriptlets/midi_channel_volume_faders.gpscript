@@ -1,13 +1,13 @@
 var
     FadersLock : Subrange Parameter 0..1 = 0
-    CH1, CH2, CH3, CH4, CH5, CH6, CH7, CH8, CH9  : Subrange Parameter 0..127 = 127
-    CH10, CH11, CH12, CH13, CH14, CH15, CH16  : Subrange Parameter 0..127 = 127
+    CH01, CH02, CH03, CH04, CH05, CH06, CH07, CH08,
+    CH09, CH10, CH11, CH12, CH13, CH14, CH15, CH16  : Subrange Parameter 0..127 = 0
     SendToAllTrigger : Subrange Parameter 0..1 = 0
 
 var
     currentValues : Subrange Array = [
-        CH1, CH2, CH3, CH4, CH5, CH6, CH7, CH8, CH9,
-        CH10, CH11, CH12, CH13, CH14, CH15, CH16
+        CH01, CH02, CH03, CH04, CH05, CH06, CH07, CH08,
+        CH09, CH10, CH11, CH12, CH13, CH14, CH15, CH16
     ]
     previous_accepted_values: Integer Array = [
         0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
@@ -39,8 +39,8 @@ End
 
 
 On ParameterValueChanged(param : Subrange, index : Integer)
-    Matching CH1, CH2, CH3, CH4, CH5, CH6, CH7, CH8, CH9,
-    CH10, CH11, CH12, CH13, CH14, CH15, CH16
+    Matching CH01, CH02, CH03, CH04, CH05, CH06, CH07, CH08,
+             CH09, CH10, CH11, CH12, CH13, CH14, CH15, CH16
 
     var channel : Integer = index + 1
 

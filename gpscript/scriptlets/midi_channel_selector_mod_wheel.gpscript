@@ -1,5 +1,0 @@
-Const
-    CCNumber : Integer = 1
-
-Include "gigperformer-modx-toolkit/gpscript/GeneralUtils/ChannelAwareMidiCCFilter"
-

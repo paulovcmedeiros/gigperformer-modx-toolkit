@@ -1,0 +1,33 @@
+Include "gigperformer-modx-toolkit/gpscript/GeneralUtils/MainAndChannelOnOffSwitches"
+Include "gigperformer-modx-toolkit/gpscript/GeneralUtils/Midi"
+
+//------------------------------------
+
+Initialization
+    //OpenLogWindow()
+    SetDisplayMessage("Copyright (c) 2026 Paulo V. C. Medeiros")
+    SetInfoMessage(
+        "Broadcast CC " +
+        TargetCCNumber +
+        " messages received on MIDI channel 1 to all enabled channels. " +
+        "Block msgs not received on MIDI channel 1."
+    )
+End
+
+On ControlChangeEvent(m : ControlChangeMessage)
+    var
+        ch : Integer
+        isReleaseMsg : Boolean = MODXTK_IsReleaseMidiMessage(m)
+
+    If GetCCNumber(m) == TargetCCNumber Then
+        If GetChannel(m) == 1 Then
+            For ch = 1; ch <= 16; ch = ch + 1 Do
+                If isReleaseMsg Or MODXTK_ChannelIsAllowed(ch) Then
+                    SendNow(WithChannel(m, ch))
+                End
+            End
+        End
+    else
+        SendNow(m)
+    end
+End

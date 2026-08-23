@@ -7,18 +7,22 @@ Initialization
     //OpenLogWindow()
     SetDisplayMessage("Copyright (c) 2026 Paulo V. C. Medeiros")
     SetInfoMessage(<<<
-        Block all messages coming from channels that are not set to ON
-        except for release-type messages, which are always allowed through.
+        Broadcast messages received on MIDI channel 1 to all selected channels.
+        Block msgs not received on MIDI channel 1.
     >>>)
 End
 
 
-On MidiEvent(m : MidiMessage)
+On NoteEvent(m : NoteMessage)
     var
-        ch : Integer = GetChannel(m)
+        ch : Integer
         isReleaseMsg : Boolean = MODXTK_IsReleaseMidiMessage(m)
 
-        If isReleaseMsg Or MODXTK_ChannelIsAllowed(ch) Then
-            SendNow(WithChannel(m, ch))
-        end
+    If GetChannel(m) == 1 Then
+        For ch = 1; ch <= 16; ch = ch + 1 Do
+            If isReleaseMsg Or MODXTK_ChannelIsAllowed(ch) Then
+                SendNow(WithChannel(m, ch))
+            end
+        End
+    end
 End

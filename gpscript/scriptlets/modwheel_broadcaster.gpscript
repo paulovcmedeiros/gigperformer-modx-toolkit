@@ -1,0 +1,4 @@
+Const
+    TargetCCNumber : Integer = 1
+
+Include "gigperformer-modx-toolkit/gpscript/scriptlets/cc_event_broadcaster"

@@ -114,6 +114,7 @@ Initialization
     SetDisplayMessage("Copyright (c) 2026 Paulo V. C. Medeiros")
     SetInfoMessage(<<<
         Select MODX Live Set performances and request sync of Performance and Part names.
+        Displaying the returned names requires the MODX rackspace SysEx receiver/template.
     >>>)
     SendPerformanceSyncMsgs()
 End
