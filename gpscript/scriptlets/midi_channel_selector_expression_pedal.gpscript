@@ -1,4 +1,6 @@
 Const
+    EXPR_PEDAL_CC_NUMBER : Integer = 11
+
     // The MIDI center value is always 64.
     // We use a constant to avoid repeating this as a "magic number".
     MIDI_CC_CENTER_VALUE : Integer = 64
@@ -55,10 +57,6 @@ Var
         SIGNAL_BREATH_CONTROLLER
     ]
 
-Const
-    EXPR_PEDAL_CC_NUMBER : Integer = 11
-
-
 Function UpdateListOfExprActiveChannels()
     // Cache which MIDI channels should react to incoming expression pedal values.
     Var
@@ -67,6 +65,12 @@ Function UpdateListOfExprActiveChannels()
     For iChZeroBased=0; iChZeroBased<16; iChZeroBased=iChZeroBased+1 Do
         isExprPedalActiveAtChannel[iChZeroBased] = channelSignals[iChZeroBased] != 0
     End
+End
+
+
+Function SignalIsSelected(signalMask : Integer, signalFlag : Integer) Returns Boolean
+    // Check whether a signal flag is selected in a channel mask.
+    result = (signalMask And signalFlag) != 0
 End
 
 
@@ -155,8 +159,8 @@ Function ResetRemovedSignals(previousSignalMask : Integer, signalMask : Integer,
 
     For iSignal=0; iSignal<Size(availableSignalFlags); iSignal=iSignal+1 Do
         signalFlag = availableSignalFlags[iSignal]
-        wasSelected = (previousSignalMask And signalFlag) != 0
-        isSelected = (signalMask And signalFlag) != 0
+        wasSelected = SignalIsSelected(previousSignalMask, signalFlag)
+        isSelected = SignalIsSelected(signalMask, signalFlag)
 
         If wasSelected And !isSelected Then
             SendSignal(signalFlag, GetSignalResetValue(signalFlag), channel)
@@ -174,8 +178,8 @@ Function SendAddedSignals(previousSignalMask : Integer, signalMask : Integer, si
 
     For iSignal=0; iSignal<Size(availableSignalFlags); iSignal=iSignal+1 Do
         signalFlag = availableSignalFlags[iSignal]
-        wasSelected = (previousSignalMask And signalFlag) != 0
-        isSelected = (signalMask And signalFlag) != 0
+        wasSelected = SignalIsSelected(previousSignalMask, signalFlag)
+        isSelected = SignalIsSelected(signalMask, signalFlag)
 
         If !wasSelected And isSelected Then
             SendSignal(signalFlag, signalValue, channel)
@@ -288,15 +292,11 @@ End
 
 
 On ControlChangeEvent(m : ControlChangeMessage) Matching EXPR_PEDAL_CC_NUMBER
-    Var
-        ccValue : Integer = GetCCValue(m)
-        remappedCC : Integer = RemapPedalCenterValue(ccValue)
-
-    currentPedalCCValue = ccValue
-    currentPedalValue = remappedCC
+    currentPedalCCValue = GetCCValue(m)
+    currentPedalValue = RemapPedalCenterValue(currentPedalCCValue)
     hasReceivedPedalValue = true
 
-    UpdatePedalValuesForActiveChannels(remappedCC)
+    UpdatePedalValuesForActiveChannels(currentPedalValue)
 End
 
 
@@ -318,7 +318,7 @@ On ParameterValueChanged(param_value : Subrange, index : Integer)
         // Each channel can emit all selected signal types from the same value.
         For iSignal=0; iSignal<Size(availableSignalFlags); iSignal=iSignal+1 Do
             signalFlag = availableSignalFlags[iSignal]
-            If (channelSignals[index] And signalFlag) != 0 Then
+            If SignalIsSelected(channelSignals[index], signalFlag) Then
                 SendSignal(signalFlag, signalValue, channel)
             End
         End
