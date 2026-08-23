@@ -58,6 +58,7 @@ The following files under `gpscript/scriptlets/` are standalone GP scriptlets:
 - `modwheel_broadcaster.gpscript`: broadcast Mod Wheel messages from MIDI channel 1 to
   enabled channels.
 - `modx_assignable_function_buttons.gpscript`: send MODX AF1 or AF2 state per MIDI channel.
+  Each instance controls one of the two buttons; use two instances to control both.
 - `modx_live_set_selector.gpscript`: select MODX Live Set performances and request
   Performance and Part names. To display synced names in widgets, use it together with
   the MODX rackspace SysEx receiver/template.
@@ -78,7 +79,8 @@ is not intended to be loaded directly.
 ### Gig and Rackspace Scripts
 
 - `gig_scripts/song_change_toggle_osc_trigger.gpscript`: toggle an OSC value whenever the
-  current song changes.
+  current song changes. It sends to the local `/SongChangeTrigger/SetValue` OSC address,
+  which requires a corresponding OSC-addressable target.
 - `rackspace_scripts/MODX_Toolkit_RackspaceScriptTemplate.gpscript`: example rackspace
   script that receives MODX SysEx and updates Performance and Part labels. Read its
   comments for the widget and MIDI block names you may need to adapt.
@@ -105,10 +107,13 @@ The `gpscript/MODX/` folder contains MODX-specific includes:
 
 At this stage, installation is manual:
 
-1. Put this repository directory under the folder Gig Performer uses as the root
-   for GPScript `Include` paths.
+1. Clone or copy this repository directory under the folder Gig Performer uses as the root
+   for GPScript `Include` paths. If you keep your working clone elsewhere, you can instead
+   create a symbolic link to it under that folder.
+
    - On Windows, it's usually `C:\Users\<your user name>\Documents\Gig Performer\Scripts`
    - On Mac, it's usually `/Users/<your user name>/Documents/Gig Performer/Scripts`
+
 2. Keep the directory name as `gigperformer-modx-toolkit`
 3. For a standalone scriptlet, create a Scriptlet plugin and add an `Include` line in its
    editor for the file you want to use. For example:
@@ -116,11 +121,18 @@ At this stage, installation is manual:
    ```gpscript
    Include "gigperformer-modx-toolkit/gpscript/scriptlets/keyboard_splitter"
    ```
-4. Gig and rackspace scripts may need to be merged into the corresponding script editor
-   rather than included unchanged. Some files also assume specific widget handles, MIDI
-   block names, or MODX settings. Those assumptions are documented mostly in the scripts.
-     - If applicable, create any required widgets and MIDI blocks with the expected names
-     - This is usually not required for scriptlets
+4. Gig and rackspace scripts can be included directly when they are the complete script for
+   that scope. If you already have script code, copy the relevant template into a user-owned
+   `.gpscript` file, customize it, merge your other callbacks into that file, and include the
+   resulting complete script from the corresponding Gig Performer script editor. Keep the
+   customized file under the GPScript `Include` root, and outside this toolkit repository, so
+   toolkit updates do not overwrite it.
+   Some files also assume specific widget handles, MIDI block names, or MODX settings. Those
+   assumptions are documented mostly in the scripts.
+
+   - If applicable, create any required widgets and MIDI blocks with the expected names
+   - This is usually not required for scriptlets
+
 5. Compile the scripts or scriptlets you use in Gig Performer.
 
 ## Safety

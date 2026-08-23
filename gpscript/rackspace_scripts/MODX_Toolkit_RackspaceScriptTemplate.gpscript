@@ -1,10 +1,14 @@
 // This file provides a template/example integration between this toolkit
 // and a Gig Performer rackspace script.
 //
-// It should work as-is if you start from a blank slate. In an existing
-// Gig Performer setup, you will usually need to merge it into your own
-// rackspace script, since each rackspace has only one rackspace script and
-// callbacks cannot be isolated per component.
+// It can serve as the complete rackspace script after you create the required
+// MIDI block and widgets described below. In an existing Gig Performer setup,
+// copy this template into your own external .gpscript file, customize it, and
+// merge it with your other rackspace code. Keep that file under your GPScript
+// Include root and include it from the rackspace script editor. Each rackspace
+// has only one rackspace script, and callbacks cannot be isolated per component.
+// Keeping your customized copy outside this toolkit repository also prevents
+// toolkit updates from overwriting it.
 //
 // The comments below call out the places users are expected to customize.
 

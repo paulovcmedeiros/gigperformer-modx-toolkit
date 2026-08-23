@@ -1,3 +1,7 @@
+// Toggle a local OSC value whenever the current song changes.
+// This expects an OSC-addressable target at /SongChangeTrigger/SetValue,
+// typically a widget whose handle is SongChangeTrigger.
+
 Var
     SongChangeToggle : Boolean = false
     ValueToBeSent : Double = 0.0
