@@ -44,30 +44,62 @@ after targeted adaptations, but I have not tested them (wish I had them to test)
 
 ### Scriptlets
 
-The files under `gpscript/scriptlets/` are meant to be used as standalone GP scriptlets:
+The following files under `gpscript/scriptlets/` are standalone GP scriptlets:
 
-- `assignable_function_buttons.gpscript`: send MODX AF1/AF2 state per MIDI channel.
-- `keyboard_splitter.gpscript`: create split zones per MIDI channel.
-- `midi_channel_faders.gpscript`: send MIDI volume changes per channel.
-- `midi_channel_octaver.gpscript`: transpose or add octave layers per MIDI channel.
-- `midi_channel_selector.gpscript`: allow or mute MIDI by channel.
-- `midi_channel_selector_sustain.gpscript`: route sustain by channel with optional auto-sustain.
+- `expression_pedal_signal_mapper.gpscript`: map one expression pedal to selectable
+  combinations of Expression, Modulation, Channel Aftertouch, Cutoff, Pitch Bend, and
+  Breath Controller per MIDI channel.
+- `keyboard_splitter.gpscript`: create and learn lower/upper keyboard zones per MIDI channel.
+- `midi_channel_octaver.gpscript`: transpose notes or add octave layers per MIDI channel.
+- `midi_channel_selector.gpscript`: allow MIDI from enabled channels while always passing
+  release-type messages to help prevent stuck notes and controllers.
+- `midi_channel_volume_faders.gpscript`: send MIDI CC7 volume values per channel, with
+  fader locking and manual resend support.
+- `modwheel_broadcaster.gpscript`: broadcast Mod Wheel messages from MIDI channel 1 to
+  enabled channels.
+- `modx_assignable_function_buttons.gpscript`: send MODX AF1 or AF2 state per MIDI channel.
 - `modx_live_set_selector.gpscript`: select MODX Live Set performances and request
-  performance/part names. To display synced names in widgets, use it together
-  with the MODX rackspace SysEx receiver/template.
-- `modx_organ_controllers.gpscript`: control drawbars for the MODX "All 9 Bars!" organ Performance.
-- `note_velocity_monitor.gpscript`: show per-channel note velocity values.
+  Performance and Part names. To display synced names in widgets, use it together with
+  the MODX rackspace SysEx receiver/template.
+- `modx_organ_controllers.gpscript`: control drawbars and presets for the MODX
+  "All 9 Bars!" organ Performance.
+- `note_event_broadcaster.gpscript`: broadcast notes from MIDI channel 1 to enabled
+  channels while allowing note releases through to all channels.
+- `note_velocity_monitor.gpscript`: display the latest note velocity per MIDI channel.
+- `pitchbend_broadcaster.gpscript`: broadcast Pitch Bend messages from MIDI channel 1
+  to enabled channels.
+- `sustain_broadcaster.gpscript`: broadcast Sustain messages from MIDI channel 1 to
+  enabled channels while allowing fully-off messages through to all channels.
+
+`cc_event_broadcaster.gpscript` is a shared scriptlet include used by the Mod Wheel and
+Sustain broadcasters. It expects the including scriptlet to define `TargetCCNumber` and
+is not intended to be loaded directly.
 
 ### Gig and Rackspace Scripts
 
-- `gig_scripts/song_change_toggle_osc_trigger.gpscript`: toggles an OSC value when the song changes.
-- `rackspace_scripts/MODX_Toolkit_RackspaceScriptTemplate.gpscript`: example rackspace script that receives MODX SysEx and updates performance/part labels. Read the comments in the script for the widgets and MIDI block names you need to adapt.
+- `gig_scripts/song_change_toggle_osc_trigger.gpscript`: toggle an OSC value whenever the
+  current song changes.
+- `rackspace_scripts/MODX_Toolkit_RackspaceScriptTemplate.gpscript`: example rackspace
+  script that receives MODX SysEx and updates Performance and Part labels. Read its
+  comments for the widget and MIDI block names you may need to adapt.
 
 ### Include Files
 
-The `MODX/` and `GeneralUtils/` folders contain reusable `Include` files used by
-the rackspace template and scriptlets. They might also contain code that other fellow
-GigPerformers may find useful.
+The `gpscript/GeneralUtils/` folder contains reusable building blocks:
+
+- `Byte2String.gpscript`: validate printable ASCII values and convert bytes to characters.
+- `ChannelAwareMidiCCFilter.gpscript`: reusable per-channel CC filter that expects the
+  including scriptlet to define `CCNumber`.
+- `MainAndChannelOnOffSwitches.gpscript`: shared main/channel parameters and channel
+  permission helpers.
+- `Midi.gpscript`: general MIDI helpers, including release-message detection.
+- `SysEx.gpscript`: general Yamaha SysEx validation.
+
+The `gpscript/MODX/` folder contains MODX-specific includes:
+
+- `PerformanceNameSysexReceiver.gpscript`: receive and display the current Performance name.
+- `PerformancePartNameSysexReceiver.gpscript`: receive and display Performance Part names.
+- `SysEx.gpscript`: validate and classify MODX SysEx messages.
 
 ## Using The Files
 
@@ -78,14 +110,15 @@ At this stage, installation is manual:
    - On Windows, it's usually `C:\Users\<your user name>\Documents\Gig Performer\Scripts`
    - On Mac, it's usually `/Users/<your user name>/Documents/Gig Performer/Scripts`
 2. Keep the directory name as `gigperformer-modx-toolkit`
-3. In the relevant Gig Performer script or scriptlet editor, add an `Include`
-   line for the file you want to use. For example:
+3. For a standalone scriptlet, create a Scriptlet plugin and add an `Include` line in its
+   editor for the file you want to use. For example:
 
    ```gpscript
    Include "gigperformer-modx-toolkit/gpscript/scriptlets/keyboard_splitter"
    ```
-4. Some files assume specific widget handles, MIDI block names, or MODX settings.
-   Those assumptions are currently documented mostly in the scripts themselves.
+4. Gig and rackspace scripts may need to be merged into the corresponding script editor
+   rather than included unchanged. Some files also assume specific widget handles, MIDI
+   block names, or MODX settings. Those assumptions are documented mostly in the scripts.
      - If applicable, create any required widgets and MIDI blocks with the expected names
      - This is usually not required for scriptlets
 5. Compile the scripts or scriptlets you use in Gig Performer.
