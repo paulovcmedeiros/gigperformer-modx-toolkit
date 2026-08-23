@@ -26,6 +26,9 @@ Var
     CCToRemapAsCenter : Subrange Parameter 1..126 = MIDI_CC_CENTER_VALUE
 
 Var
+    currentPedalValue : Integer = 0
+    hasReceivedPedalValue : Boolean = false
+
     isExprPedalActiveAtChannel : Boolean Array = [
         false, false, false, false, false, false, false, false,
         false, false, false, false, false, false, false, false
@@ -118,6 +121,8 @@ End
 
 Function GetSignalResetValue(signalFlag : Integer) Returns Integer
     // Return the neutral MIDI value for a signal that is no longer selected.
+    // These values assume conventional MIDI destinations; custom or inverted
+    // mappings may require different neutral values.
     Select
         signalFlag == SIGNAL_EXPRESSION do result = 127
         signalFlag == SIGNAL_CUTOFF     do result = MIDI_CC_CENTER_VALUE
@@ -142,6 +147,36 @@ Function ResetRemovedSignals(previousSignalMask : Integer, signalMask : Integer,
         If wasSelected And !isSelected Then
             SendSignal(signalFlag, GetSignalResetValue(signalFlag), channel)
         End
+    End
+End
+
+
+Function SendAddedSignals(previousSignalMask : Integer, signalMask : Integer, signalValue : Integer, channel : Integer)
+    // Send the current pedal value only as signals newly added to a channel mask.
+    Var
+        iSignal : Integer
+        signalFlag : Integer
+        wasSelected, isSelected : Boolean
+
+    For iSignal=0; iSignal<Size(availableSignalFlags); iSignal=iSignal+1 Do
+        signalFlag = availableSignalFlags[iSignal]
+        wasSelected = (previousSignalMask And signalFlag) != 0
+        isSelected = (signalMask And signalFlag) != 0
+
+        If !wasSelected And isSelected Then
+            SendSignal(signalFlag, signalValue, channel)
+        End
+    End
+End
+
+
+Function ResetSelectedSignalsForAllChannels()
+    // Reset every signal selected in the current channel masks.
+    Var
+        iChZeroBased : Integer
+
+    For iChZeroBased=0; iChZeroBased<16; iChZeroBased=iChZeroBased+1 Do
+        ResetRemovedSignals(channelSignals[iChZeroBased], 0, iChZeroBased + 1)
     End
 End
 
@@ -171,7 +206,8 @@ Initialization
     SetInfoMessage(<<<
     Remap inputs from one expression pedal to the selected MIDI signals per channel.
     Supports Expression, Modulation, Pitch Bend, Cutoff, Aftertouch, and Breath Controller.
-    Signals removed from a channel are reset to their neutral MIDI values.
+    Selected signals are reset on rackspace activation and when removed from a channel.
+    Conventional reset values are used: Expression=127, Cutoff=64, Pitch Bend=center, and others=0.
     Signal bit values:
         * Expression        =  1
         * Modulation        =  2
@@ -193,6 +229,9 @@ End
 
 
 On Activate
+    hasReceivedPedalValue = false
+    // Reset here because scriptlet MIDI output is unavailable by On Deactivate.
+    ResetSelectedSignalsForAllChannels()
     UpdateListOfExprActiveChannels()
     ResetValuesForInactiveChannels()
 End
@@ -211,6 +250,12 @@ On ParameterValueChanged(param_value : Subrange, index : Integer)
         channel : Integer = index + 1
 
     ResetRemovedSignals(previousSignalMask, signalMask, channel)
+    If hasReceivedPedalValue Then
+        SendAddedSignals(previousSignalMask, signalMask, currentPedalValue, channel)
+        If previousSignalMask == 0 And signalMask != 0 Then
+            channelPedalValues[index] = currentPedalValue
+        End
+    End
     UpdateListOfExprActiveChannels()
     ResetValuesForInactiveChannels()
 End
@@ -221,6 +266,9 @@ On ControlChangeEvent(m : ControlChangeMessage) Matching EXPR_PEDAL_CC_NUMBER
         iCh : Integer
         ccValue : Integer = GetCCValue(m)
         remappedCC : Integer = RemapPedalCenterValue(ccValue)
+
+    currentPedalValue = remappedCC
+    hasReceivedPedalValue = true
 
     // Drive every active channel parameter from the same physical pedal value.
     For iCh=0; iCh<16; iCh=iCh+1 Do
