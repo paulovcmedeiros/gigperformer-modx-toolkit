@@ -26,3 +26,16 @@ Function MODXTK_ByteToChar(b : Integer) Returns String
         result = PrintableAsciiMap[b - indexOffset]
     End
 End
+
+
+Function MODXTK_IntToRightAlignedString(value : Integer, width : Integer) Returns String
+    // Returns value as decimal text, left-padded with spaces to at least width characters.
+    // Values already width characters or longer, including a minus sign, are unchanged.
+    Var text : String = IntToString(value)
+
+    While Length(text) < width Do
+        text = " " + text
+    End
+
+    result = text
+End

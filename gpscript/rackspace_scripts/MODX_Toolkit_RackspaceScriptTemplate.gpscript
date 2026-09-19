@@ -47,7 +47,7 @@ Var
 
 
 // These files must be included in this specific order
-Include "gigperformer-modx-toolkit/gpscript/GeneralUtils/Byte2String"
+Include "gigperformer-modx-toolkit/gpscript/GeneralUtils/StringUtils"
 Include "gigperformer-modx-toolkit/gpscript/GeneralUtils/SysEx"
 Include "gigperformer-modx-toolkit/gpscript/MODX/SysEx"
 Include "gigperformer-modx-toolkit/gpscript/MODX/PerformanceNameSysexReceiver"

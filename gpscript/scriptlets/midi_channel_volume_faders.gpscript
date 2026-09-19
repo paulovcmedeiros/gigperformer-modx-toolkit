@@ -1,3 +1,5 @@
+Include "gigperformer-modx-toolkit/gpscript/GeneralUtils/StringUtils"
+
 var
     FadersLock : Subrange Parameter 0..1 = 0
     CH01, CH02, CH03, CH04, CH05, CH06, CH07, CH08,
@@ -30,6 +32,10 @@ Function SendVolumeChangeMsg(channel : Integer)
         message : MidiMessage = MakeControlChangeMessageEx(7, value, channel)
 
     SendLater(message, 50)
+    OverrideParameterText(
+        currentValues[index],
+        GetParameterName(currentValues[index]) + ": " + MODXTK_IntToRightAlignedString(value, 3)
+    )
 End
 
 
