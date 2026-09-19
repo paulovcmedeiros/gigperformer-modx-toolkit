@@ -3,7 +3,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Status: early](https://img.shields.io/badge/status-early-orange.svg)
 [![Gig Performer](https://img.shields.io/badge/Gig%20Performer-tested%205.2.2-lightgrey.svg)](https://gigperformer.com)
-[![Yamaha MODX](https://img.shields.io/badge/Yamaha-MODX-lightgrey.svg)](https://yamahasynth.com/learn/modx-series-synthesizers/introducing-the-modx-music-synthesizer)
+[![Yamaha MODX](https://img.shields.io/badge/Yamaha-MODX-lightgrey.svg)](https://usa.yamaha.com/products/music_production/synthesizers/modx/index.html)
 
 This is a collection of reusable GPScript utilities and MODX helpers developed for my own Gig Performer/MODX live rig. The focus is MIDI routing and control, with the MODX as the sound engine and Gig Performer as its control layer.
 
@@ -49,12 +49,13 @@ The following files under `gpscript/scriptlets/` are standalone GP scriptlets:
 - `expression_pedal_signal_mapper.gpscript`: map one expression pedal to selectable
   combinations of Expression, Modulation, Channel Aftertouch, Cutoff, Pitch Bend, and
   Breath Controller per MIDI channel.
-- `keyboard_splitter.gpscript`: create and learn lower/upper keyboard zones per MIDI channel.
+- `keyboard_splitter.gpscript`: create lower/upper keyboard zones per MIDI channel, with
+  controls for resetting boundaries or learning them from played notes.
 - `midi_channel_octaver.gpscript`: transpose notes or add octave layers per MIDI channel.
 - `midi_channel_selector.gpscript`: allow MIDI from enabled channels while always passing
   release-type messages to help prevent stuck notes and controllers.
-- `midi_channel_volume_faders.gpscript`: send MIDI CC7 volume values per channel, with
-  fader locking and manual resend support.
+- `midi_channel_volume_faders.gpscript`: send MIDI CC7 volume values per channel, show the
+  current numeric values in the parameter text, and provide fader locking and manual resend.
 - `modwheel_broadcaster.gpscript`: broadcast Mod Wheel messages from MIDI channel 1 to
   enabled channels.
 - `modx_assignable_function_buttons.gpscript`: send MODX AF1 or AF2 state per MIDI channel.
@@ -92,7 +93,8 @@ is not intended to be loaded directly.
 
 The `gpscript/GeneralUtils/` folder contains reusable building blocks:
 
-- `Byte2String.gpscript`: validate printable ASCII values and convert bytes to characters.
+- `StringUtils.gpscript`: validate and convert printable ASCII bytes, and format integers
+  as right-aligned text.
 - `ChannelAwareMidiCCFilter.gpscript`: reusable per-channel CC filter that expects the
   including scriptlet to define `CCNumber`.
 - `MainAndChannelOnOffSwitches.gpscript`: shared main/channel parameters and channel
