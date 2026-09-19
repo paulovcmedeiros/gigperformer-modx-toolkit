@@ -1,6 +1,5 @@
 Include "gigperformer-modx-toolkit/gpscript/GeneralUtils/Midi"
 
-
 var
     LearnTogglesMode : Discrete Parameter "Reset", "Learn" = "Reset"
 
@@ -8,13 +7,13 @@ CH1_Lower_Toggle, CH2_Lower_Toggle, CH3_Lower_Toggle, CH4_Lower_Toggle,
 CH5_Lower_Toggle, CH6_Lower_Toggle, CH7_Lower_Toggle, CH8_Lower_Toggle,
 CH9_Lower_Toggle, CH10_Lower_Toggle, CH11_Lower_Toggle, CH12_Lower_Toggle,
 CH13_Lower_Toggle, CH14_Lower_Toggle, CH15_Lower_Toggle, CH16_Lower_Toggle :
-Discrete Parameter "OFF", "ON" = "OFF"
+    Discrete Parameter "OFF", "ON" = "OFF"
 
 CH1_Upper_Toggle, CH2_Upper_Toggle, CH3_Upper_Toggle, CH4_Upper_Toggle,
 CH5_Upper_Toggle, CH6_Upper_Toggle, CH7_Upper_Toggle, CH8_Upper_Toggle,
 CH9_Upper_Toggle, CH10_Upper_Toggle, CH11_Upper_Toggle, CH12_Upper_Toggle,
 CH13_Upper_Toggle, CH14_Upper_Toggle, CH15_Upper_Toggle, CH16_Upper_Toggle :
-Discrete Parameter "OFF", "ON" = "OFF"
+    Discrete Parameter "OFF", "ON" = "OFF"
 
 CH1_Lower, CH2_Lower, CH3_Lower, CH4_Lower,
 CH5_Lower, CH6_Lower, CH7_Lower, CH8_Lower,
@@ -39,19 +38,18 @@ Var
         CH9_Upper, CH10_Upper, CH11_Upper, CH12_Upper,
         CH13_Upper, CH14_Upper, CH15_Upper, CH16_Upper
     ]
-    LearningLowerNotes : Discrete Array =  [
+    LowerNoteLearningToggles : Discrete Array =  [
         CH1_Lower_Toggle, CH2_Lower_Toggle, CH3_Lower_Toggle, CH4_Lower_Toggle,
         CH5_Lower_Toggle, CH6_Lower_Toggle, CH7_Lower_Toggle, CH8_Lower_Toggle,
         CH9_Lower_Toggle, CH10_Lower_Toggle, CH11_Lower_Toggle, CH12_Lower_Toggle,
         CH13_Lower_Toggle, CH14_Lower_Toggle, CH15_Lower_Toggle, CH16_Lower_Toggle
     ]
-    LearningUpperNotes : Discrete Array =  [
+    UpperNoteLearningToggles : Discrete Array =  [
         CH1_Upper_Toggle, CH2_Upper_Toggle, CH3_Upper_Toggle, CH4_Upper_Toggle,
         CH5_Upper_Toggle, CH6_Upper_Toggle, CH7_Upper_Toggle, CH8_Upper_Toggle,
         CH9_Upper_Toggle, CH10_Upper_Toggle, CH11_Upper_Toggle, CH12_Upper_Toggle,
         CH13_Upper_Toggle, CH14_Upper_Toggle, CH15_Upper_Toggle, CH16_Upper_Toggle
     ]
-
 
 
 Initialization
@@ -63,12 +61,48 @@ Initialization
 End
 
 
+Function setSplitPoint(note_number : Integer)
+    // Set every armed channel boundary to note_number, then swap its bounds if needed.
+    Var
+        noteName : String = NoteNumberToNoteName(note_number)
+        channelIndex : Integer
+        newLower, newUpper  : String
+        didLearnThisChannel : Boolean
+
+        For channelIndex = 0; channelIndex < 16; channelIndex = channelIndex + 1 Do
+            didLearnThisChannel = false
+
+            If LowerNoteLearningToggles[channelIndex] == "ON" Then
+                LowerNotes[channelIndex] = noteName
+                LowerNoteLearningToggles[channelIndex] = "OFF"
+                didLearnThisChannel = true
+            End
+
+            If UpperNoteLearningToggles[channelIndex] == "ON" Then
+                UpperNotes[channelIndex] = noteName
+                UpperNoteLearningToggles[channelIndex] = "OFF"
+                didLearnThisChannel = true
+            End
+
+            If didLearnThisChannel Then
+                If NoteNameToNoteNumber(UpperNotes[channelIndex]) < NoteNameToNoteNumber(LowerNotes[channelIndex]) Then
+                    newLower = UpperNotes[channelIndex]
+                    newUpper = LowerNotes[channelIndex]
+                    LowerNotes[channelIndex] = newLower
+                    UpperNotes[channelIndex] = newUpper
+                End
+            End
+        End
+End
+
+
 On ParameterValueChanged(param_value : Discrete, index : Integer)
     Matching
     CH1_Lower_Toggle, CH2_Lower_Toggle, CH3_Lower_Toggle, CH4_Lower_Toggle,
     CH5_Lower_Toggle, CH6_Lower_Toggle, CH7_Lower_Toggle, CH8_Lower_Toggle,
     CH9_Lower_Toggle, CH10_Lower_Toggle, CH11_Lower_Toggle, CH12_Lower_Toggle,
     CH13_Lower_Toggle, CH14_Lower_Toggle, CH15_Lower_Toggle, CH16_Lower_Toggle,
+    //
     CH1_Upper_Toggle, CH2_Upper_Toggle, CH3_Upper_Toggle, CH4_Upper_Toggle,
     CH5_Upper_Toggle, CH6_Upper_Toggle, CH7_Upper_Toggle, CH8_Upper_Toggle,
     CH9_Upper_Toggle, CH10_Upper_Toggle, CH11_Upper_Toggle, CH12_Upper_Toggle,
@@ -79,12 +113,12 @@ On ParameterValueChanged(param_value : Discrete, index : Integer)
         channelIndex : Integer = index % 16
 
     If (param_value == "ON") And (LearnTogglesMode == "Reset") Then
+        param_value = "OFF"
         If isLower Then
             LowerNotes[channelIndex] = "C-2"
         Else
             UpperNotes[channelIndex] = "G8"
         End
-        param_value = "OFF"
     End
 End
 
@@ -92,41 +126,20 @@ End
 On NoteEvent(m : NoteMessage)
     Var
         note_channel, LowerLimit, UpperLimit : Integer
-        note_number  : Integer = GetNoteNumber(m)
-        iChannel : Integer
-        noteName, newLower, newUpper  : String
-        anyLearningHappened : Boolean = false
+        note_number : Integer
 
-    If (LearnTogglesMode == "Learn") And IsNoteOn(m) And (GetVelocity(m) > 0) Then
-        noteName = NoteNumberToNoteName(note_number)
-        For iChannel = 0; iChannel < 16; iChannel = iChannel + 1 Do
-            If LearningLowerNotes[iChannel] == "ON" Then
-                LowerNotes[iChannel] = noteName
-                LearningLowerNotes[iChannel] = "OFF"
-                anyLearningHappened = true
-            End
-
-            If LearningUpperNotes[iChannel] == "ON" Then
-                UpperNotes[iChannel] = noteName
-                LearningUpperNotes[iChannel] = "OFF"
-                anyLearningHappened = true
-            End
-
-            If NoteNameToNoteNumber(UpperNotes[iChannel]) < NoteNameToNoteNumber(LowerNotes[iChannel]) Then
-                newLower = UpperNotes[iChannel]
-                newUpper = LowerNotes[iChannel]
-                LowerNotes[iChannel] = newLower
-                UpperNotes[iChannel] = newUpper
-            End
+    If MODXTK_IsReleaseMidiMessage(m) Then
+        SendNow(m)
+    Else
+        note_number = GetNoteNumber(m)
+        If (LearnTogglesMode == "Learn") Then
+            setSplitPoint(note_number)
         End
-    End
 
-    If !anyLearningHappened Then
         note_channel = GetChannel(m)
         LowerLimit = NoteNameToNoteNumber(LowerNotes[note_channel - 1])
         UpperLimit = NoteNameToNoteNumber(UpperNotes[note_channel - 1])
-        If MODXTK_IsReleaseMidiMessage(m)
-            Or ((note_number >= LowerLimit) And (note_number <= UpperLimit)) Then
+        If (note_number >= LowerLimit) And (note_number <= UpperLimit) Then
             SendNow(m)
         End
     End
